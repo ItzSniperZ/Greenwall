@@ -1,22 +1,19 @@
 #include <dht.h>
+#include "Adafruit_PM25AQI.h"
 
-// Pins for the 8 sensors
-const int DHTPins[8] = {22, 23, 24, 25, 26, 27, 32, 33};
-const int moisturePins[8] = {14, 15, 16, 17, 18, 19, 20, 21};
+const int DHTPins[8] = {22, 23, 24, 25, 26, 27, 32, 33}; //pins for DHT sensors
+const int moisturePins[8] = {14, 15, 16, 17, 18, 19, 20, 21}; //pins for moisture sensors
 const int photocellPin = A3;
-const int photoCellMin = 0;
-const int photoCellMax = 1000;
-#define REDPIN 7
-#define GREENPIN 6
-#define BLUEPIN 5
-
-// Create 8 DHT sensor objects
-dht DHTs[8];
-
-// Arrays to store values
-int temperatures[8];
-int humidities[8];
-int moistureValues[8];
+const int photoCellMin = 0; //minimum value for photo resistor
+const int photoCellMax = 1000; //max value for photo resistor
+#define REDPIN 6
+#define GREENPIN 5
+#define BLUEPIN 3
+Adafruit_PM25AQI aqi = Adafruit_PM25AQI(); //air quality sensor
+dht DHTs[8]; //DHT sensor objects
+int temperatures[8]; //array to store DHT temperature values
+int humidities[8]; //array to store DHT humidity values
+int moistureValues[8]; //array to store moisture values
 
 void setup() {
   Serial.begin(9600);
@@ -25,13 +22,17 @@ void setup() {
   pinMode(BLUEPIN, OUTPUT);
 
   // Set color to solid red
-  analogWrite(REDPIN, 120);  // full brightness red
+  analogWrite(REDPIN, 255);  // full brightness red
   analogWrite(GREENPIN, 0);  // green off
   analogWrite(BLUEPIN, 0);   // blue off
+
+  if (! aqi.begin_I2C()) {
+     Serial.println("Could not find PM 2.5 sensor!");
+  }
 }
 
 void loop() {
-  for (int i = 0; i < 8; i++) {
+  for (int i = 0; i < 8; i++) { //loop to go through all cells
     int output = DHTs[i].read11(DHTPins[i]); // Read sensor
 
     // Store values
@@ -52,8 +53,7 @@ void loop() {
     Serial.print("Humidity: ");
     Serial.print(humidities[i]);
     Serial.println(" %");
-  }
-  for (int i = 0; i < 8; i++) {
+ 
     moistureValues[i] = analogRead(moisturePins[i]);
     Serial.print("Moisture Sensor ");
     Serial.print(i + 1);
@@ -68,6 +68,39 @@ void loop() {
   Serial.print(lightPercent);
   Serial.print("%");
   Serial.println("");
+  Serial.println("------------------------------------------------");
+  
+  PM25_AQI_Data data;
+  if (! aqi.read(&data)) {
+    Serial.println("Could not read from AQI");
+    
+    delay(500);  // try again in a bit!
+    return;
+  }
+
+  Serial.println("AQI reading success");
+ // Air quality sensor code
+  Serial.println(F("---------------------------------------"));
+  Serial.println(F("Concentration Units (standard)"));
+  Serial.print(F("PM 1.0: ")); Serial.print(data.pm10_standard);
+  Serial.print(F("\t\tPM 2.5: ")); Serial.print(data.pm25_standard);
+  Serial.print(F("\t\tPM 10: ")); Serial.println(data.pm100_standard);
+  Serial.println(F("---------------------------------------"));
+  Serial.println(F("Concentration Units (environmental)"));
+  Serial.print(F("PM 1.0: ")); Serial.print(data.pm10_env);
+  Serial.print(F("\t\tPM 2.5: ")); Serial.print(data.pm25_env);
+  Serial.print(F("\t\tPM 10: ")); Serial.println(data.pm100_env);
+  Serial.println(F("---------------------------------------"));
+  Serial.print(F("Particles > 0.3um / 0.1L air:")); Serial.println(data.particles_03um);
+  Serial.print(F("Particles > 0.5um / 0.1L air:")); Serial.println(data.particles_05um);
+  Serial.print(F("Particles > 1.0um / 0.1L air:")); Serial.println(data.particles_10um);
+  Serial.print(F("Particles > 2.5um / 0.1L air:")); Serial.println(data.particles_25um);
+  Serial.print(F("Particles > 5.0um / 0.1L air:")); Serial.println(data.particles_50um);
+  Serial.print(F("Particles > 10 um / 0.1L air:")); Serial.println(data.particles_100um);
+  Serial.println(F("---------------------------------------"));
+  Serial.println(F("AQI"));
+  Serial.print(F("PM2.5 AQI US: ")); Serial.print(data.aqi_pm25_us);
+  Serial.print(F("\tPM10  AQI US: ")); Serial.println(data.aqi_pm100_us);
   Serial.println("------------------------------------------------");
   delay(3000); // Wait before next full set of readings
 }
