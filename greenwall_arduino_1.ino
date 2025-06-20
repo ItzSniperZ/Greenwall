@@ -3,6 +3,7 @@
 
 const int DHTPins[8] = {22, 23, 24, 25, 26, 27, 32, 33}; //pins for DHT sensors
 const int moisturePins[8] = {14, 15, 16, 17, 18, 19, 20, 21}; //pins for moisture sensors
+const int relayPins[8] = {3, 4, 5, 6, 9, 10, 11, 12}; //pins for relay sensors (fan controllers)
 const int photocellPin = A3;
 const int photoCellMin = 0; //minimum value for photo resistor
 const int photoCellMax = 1000; //max value for photo resistor
@@ -29,12 +30,15 @@ void setup() {
   if (! aqi.begin_I2C()) {
      Serial.println("Could not find PM 2.5 sensor!");
   }
+  for (int i = 0; i < 8; i++) { //initializes relays for fan control and sets them to off
+    pinMode(relayPins[i], OUTPUT);
+    digitalWrite(relayPins[i], LOW);
+  }
 }
 
 void loop() {
   for (int i = 0; i < 8; i++) { //loop to go through all cells
     int output = DHTs[i].read11(DHTPins[i]); // Read sensor
-
     // Store values
     temperatures[i] = DHTs[i].temperature;
     humidities[i] = DHTs[i].humidity;
@@ -45,6 +49,13 @@ void loop() {
     Serial.print(" (Pin ");
     Serial.print(DHTPins[i]);
     Serial.print("): ");
+
+    if (temperatures[i] > 26.66) {
+      digitalWrite(relayPins[i], HIGH);  // Too warm → fan ON
+    } 
+    else if (temperatures[i] < 21.11) {
+        digitalWrite(relayPins[i], LOW);  //Cool enough → fan OFF
+    }
 
     Serial.print("Temperature: ");
     Serial.print(temperatures[i]);
