@@ -53,7 +53,7 @@ void setup() {
 
 void loop() {
   for (int i = 0; i < 6; i++) { //loop to go through all cells
-  int output = DHTs[i].read11(DHTPins[i]); // Read sensor
+    int output = DHTs[i].read11(DHTPins[i]); // Read sensor
     // Store values
     temperatures[i] = DHTs[i].temperature;
     humidities[i] = DHTs[i].humidity;
@@ -88,16 +88,16 @@ void loop() {
     Serial.print("): ");
     Serial.println(moistureValues[i]);
 
-  if (moistureValues[i] > DRY_THRESHOLD && !pumpRunning) {
-    Serial.print("Soil too dry in sensor ");
-    Serial.print(i + 1);
-    Serial.println(" → Starting Pump");
-    setWaterPump(waterPumpPin, HIGH);
-    pumpRunning = true;
-    pumpStartTime = millis();
-    break; // stop checking others this cycle
-  }
-} 
+    if (moistureValues[i] > DRY_THRESHOLD && !pumpRunning) {
+      Serial.print("Soil too dry in sensor ");
+      Serial.print(i + 1);
+      Serial.println(" → Starting Pump");
+      setWaterPump(waterPumpPin, HIGH);
+      pumpRunning = true;
+      pumpStartTime = millis();
+      break; // stop checking others this cycle
+    }
+  } 
   if (pumpRunning && millis() - pumpStartTime >= pumpDuration) {
     setWaterPump(waterPumpPin, LOW);
     pumpRunning = false;
@@ -115,13 +115,12 @@ void loop() {
   PM25_AQI_Data data;
   if (! aqi.read(&data)) {
     Serial.println("Could not read from AQI");
-    
-    delay(500);  // try again in a bit!
+    delay(500);
     return;
   }
 
-  Serial.println("AQI reading success");
  // air quality sensor code
+  Serial.println("AQI reading success");
   Serial.println(F("---------------------------------------"));
   uint16_t aqiValue = data.aqi_pm25_us;
   String category;
