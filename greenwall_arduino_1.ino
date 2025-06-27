@@ -14,6 +14,9 @@ const int photoCellMin = 0; //minimum value for photo resistor
 const int photoCellMax = 1000; //max value for photo resistor
 const int DRY_THRESHOLD = 850; // limit for how dry rockwool can be before running water
 const int WET_THRESHOLD = 350; //limit to how dry the rockwool can be before stopping water
+unsigned long pumpStartTime = 0;
+bool pumpRunning = false;
+const unsigned long pumpDuration = 10000; // 10 seconds
 Adafruit_PM25AQI aqi = Adafruit_PM25AQI(); //air quality sensor
 dht DHTs[6]; //DHT sensor objects
 int temperatures[6]; //array to store DHT temperature values
@@ -85,19 +88,22 @@ void loop() {
     Serial.print("): ");
     Serial.println(moistureValues[i]);
 
-    if (moistureValues[i] > DRY_THRESHOLD) { // if too dry, turn on water
-      Serial.print("Soil too dry in sensor ");
-      Serial.print(i + 1);
-      setWaterPump(waterPumpPin, HIGH);
-      delay (10000);
-      setWaterPump(waterPumpPin, LOW);
-    }
-    if (moistureValues[i] < WET_THRESHOLD) { // if too wet, turn off water
-      Serial.print("Soil to wet in sensor ");
-      Serial.print(i + 1);
-      setWaterPump(waterPumpPin, LOW);
-    }
-  } 
+  if (moistureValues[i] > DRY_THRESHOLD && !pumpRunning) {
+    Serial.print("Soil too dry in sensor ");
+    Serial.print(i + 1);
+    Serial.println(" → Starting Pump");
+    setWaterPump(waterPumpPin, HIGH);
+    pumpRunning = true;
+    pumpStartTime = millis();
+    break; // stop checking others this cycle
+  }
+} 
+  if (pumpRunning && millis() - pumpStartTime >= pumpDuration) {
+    setWaterPump(waterPumpPin, LOW);
+    pumpRunning = false;
+    Serial.println("Pump cycle complete → Pump OFF");
+  }
+
   int photoReading = analogRead(photocellPin);
   int lightPercent = map(photoReading, photoCellMin, photoCellMax, 0, 100); // Adjustments for photo cell sensitivity.
   Serial.print("Light Reading: ");
@@ -117,26 +123,20 @@ void loop() {
   Serial.println("AQI reading success");
  // air quality sensor code
   Serial.println(F("---------------------------------------"));
-  Serial.println(F("Concentration Units (standard)"));
-  Serial.print(F("PM 1.0: ")); Serial.print(data.pm10_standard);
-  Serial.print(F("\t\tPM 2.5: ")); Serial.print(data.pm25_standard);
-  Serial.print(F("\t\tPM 10: ")); Serial.println(data.pm100_standard);
-  Serial.println(F("---------------------------------------"));
-  Serial.println(F("Concentration Units (environmental)"));
-  Serial.print(F("PM 1.0: ")); Serial.print(data.pm10_env);
-  Serial.print(F("\t\tPM 2.5: ")); Serial.print(data.pm25_env);
-  Serial.print(F("\t\tPM 10: ")); Serial.println(data.pm100_env);
-  Serial.println(F("---------------------------------------"));
-  Serial.print(F("Particles > 0.3um / 0.1L air:")); Serial.println(data.particles_03um);
-  Serial.print(F("Particles > 0.5um / 0.1L air:")); Serial.println(data.particles_05um);
-  Serial.print(F("Particles > 1.0um / 0.1L air:")); Serial.println(data.particles_10um);
-  Serial.print(F("Particles > 2.5um / 0.1L air:")); Serial.println(data.particles_25um);
-  Serial.print(F("Particles > 5.0um / 0.1L air:")); Serial.println(data.particles_50um);
-  Serial.print(F("Particles > 10 um / 0.1L air:")); Serial.println(data.particles_100um);
-  Serial.println(F("---------------------------------------"));
-  Serial.println(F("AQI"));
-  Serial.print(F("PM2.5 AQI US: ")); Serial.print(data.aqi_pm25_us);
-  Serial.print(F("\tPM10  AQI US: ")); Serial.println(data.aqi_pm100_us);
+  uint16_t aqiValue = data.aqi_pm25_us;
+  String category;
+
+  if (aqiValue <= 50) category = "Good";
+  else if (aqiValue <= 100) category = "Moderate";
+  else if (aqiValue <= 150) category = "Unhealthy for Sensitive Groups";
+  else if (aqiValue <= 200) category = "Unhealthy";
+  else if (aqiValue <= 300) category = "Very Unhealthy";
+  else category = "Hazardous";
+
+  Serial.print("Air Quality (PM2.5 AQI US): ");
+  Serial.print(aqiValue);
+  Serial.print(" → ");
+  Serial.println(category);
   Serial.println("------------------------------------------------");
-  delay(3000); // Wait before next full set of readings
+  delay(2500); // Wait before next full set of readings
 }
