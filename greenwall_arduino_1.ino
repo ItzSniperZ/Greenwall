@@ -1,44 +1,56 @@
 #include <dht.h>
 #include "Adafruit_PM25AQI.h"
 
-const int DHTPins[8] = {22, 23, 24, 25, 26, 27, 32, 33}; //pins for DHT sensors
-const int moisturePins[8] = {14, 15, 16, 17, 18, 19, 20, 21}; //pins for moisture sensors
-const int relayPins[8] = {3, 4, 5, 6, 9, 10, 11, 12}; //pins for relay sensors (fan controllers)
+// Digital Pins Free: {1, 32-43, 51-53} (16 pins)
+const int DHTPins[6] = {20, 21, 22, 23, 24, 25}; //pins for DHT sensors
+const int moisturePins[6] = {14, 15, 16, 17, 18, 19}; //pins for moisture sensors
+const int relayPins[6] = {26, 27, 28, 29, 30, 31}; //pins for relay sensors (fan controllers)
+const int redPins[6] = {2, 5, 8, 11, 44, 47}; //red LED pins
+const int greenPins[6] = {3, 6, 9, 12, 45, 48}; //green LED pins
+const int bluePins[6] = {4, 7, 10, 13, 46, 49}; //blue LED pins
+const int waterPumpPin = 50;
 const int photocellPin = A3;
 const int photoCellMin = 0; //minimum value for photo resistor
 const int photoCellMax = 1000; //max value for photo resistor
-#define REDPIN 6
-#define GREENPIN 5
-#define BLUEPIN 3
+const int DRY_THRESHOLD = 850; // limit for how dry rockwool can be before running water
+const int WET_THRESHOLD = 350; //limit to how dry the rockwool can be before stopping water
 Adafruit_PM25AQI aqi = Adafruit_PM25AQI(); //air quality sensor
-dht DHTs[8]; //DHT sensor objects
-int temperatures[8]; //array to store DHT temperature values
-int humidities[8]; //array to store DHT humidity values
-int moistureValues[8]; //array to store moisture values
+dht DHTs[6]; //DHT sensor objects
+int temperatures[6]; //array to store DHT temperature values
+int humidities[6]; //array to store DHT humidity values
+int moistureValues[6]; //array to store moisture values
+
+void setLEDColor(int stripIndex, int redVal, int greenVal, int blueVal) {
+  digitalWrite(redPins[stripIndex], redVal);
+  digitalWrite(greenPins[stripIndex], greenVal);
+  digitalWrite(bluePins[stripIndex], blueVal);
+}
+
+void setWaterPump(int pin, int power) { // on/off control for water pump
+  digitalWrite(pin, power);
+}
 
 void setup() {
   Serial.begin(9600);
-  pinMode(REDPIN, OUTPUT);
-  pinMode(GREENPIN, OUTPUT);
-  pinMode(BLUEPIN, OUTPUT);
-
-  // Set color to solid red
-  analogWrite(REDPIN, 255);  // full brightness red
-  analogWrite(GREENPIN, 0);  // green off
-  analogWrite(BLUEPIN, 0);   // blue off
-
-  if (! aqi.begin_I2C()) {
-     Serial.println("Could not find PM 2.5 sensor!");
-  }
-  for (int i = 0; i < 8; i++) { //initializes relays for fan control and sets them to off
+  for (int i = 0; i < 6; i++) {
+    pinMode(redPins[i], OUTPUT);
+    pinMode(greenPins[i], OUTPUT);
+    pinMode(bluePins[i], OUTPUT);
+    setLEDColor(i, LOW, HIGH, LOW); // Turn green initially
+    
     pinMode(relayPins[i], OUTPUT);
     digitalWrite(relayPins[i], LOW);
   }
+  if (! aqi.begin_I2C()) {
+     Serial.println("Could not find PM 2.5 sensor!");
+  }
+  pinMode(waterPumpPin, OUTPUT);
+  digitalWrite(waterPumpPin, LOW);
 }
 
 void loop() {
-  for (int i = 0; i < 8; i++) { //loop to go through all cells
-    int output = DHTs[i].read11(DHTPins[i]); // Read sensor
+  for (int i = 0; i < 6; i++) { //loop to go through all cells
+  int output = DHTs[i].read11(DHTPins[i]); // Read sensor
     // Store values
     temperatures[i] = DHTs[i].temperature;
     humidities[i] = DHTs[i].humidity;
@@ -54,7 +66,7 @@ void loop() {
       digitalWrite(relayPins[i], HIGH);  // Too warm → fan ON
     } 
     else if (temperatures[i] < 21.11) {
-        digitalWrite(relayPins[i], LOW);  //Cool enough → fan OFF
+        digitalWrite(relayPins[i], LOW);  // Cool enough → fan OFF
     }
 
     Serial.print("Temperature: ");
@@ -72,6 +84,19 @@ void loop() {
     Serial.print(moisturePins[i]);
     Serial.print("): ");
     Serial.println(moistureValues[i]);
+
+    if (moistureValues[i] > DRY_THRESHOLD) { // if too dry, turn on water
+      Serial.print("Soil too dry in sensor ");
+      Serial.print(i + 1);
+      setWaterPump(waterPumpPin, HIGH);
+      delay (10000);
+      setWaterPump(waterPumpPin, LOW);
+    }
+    if (moistureValues[i] < WET_THRESHOLD) { // if too wet, turn off water
+      Serial.print("Soil to wet in sensor ");
+      Serial.print(i + 1);
+      setWaterPump(waterPumpPin, LOW);
+    }
   } 
   int photoReading = analogRead(photocellPin);
   int lightPercent = map(photoReading, photoCellMin, photoCellMax, 0, 100); // Adjustments for photo cell sensitivity.
@@ -90,7 +115,7 @@ void loop() {
   }
 
   Serial.println("AQI reading success");
- // Air quality sensor code
+ // air quality sensor code
   Serial.println(F("---------------------------------------"));
   Serial.println(F("Concentration Units (standard)"));
   Serial.print(F("PM 1.0: ")); Serial.print(data.pm10_standard);
