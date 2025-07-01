@@ -87,6 +87,16 @@ void loop() {
     Serial.print(moisturePins[i]);
     Serial.print("): ");
     Serial.println(moistureValues[i]);
+    if (moistureValues[i] > DRY_THRESHOLD) {
+      setLEDColor(i, HIGH, LOW, LOW); // Red = too dry
+    } 
+    else if (moistureValues[i] < WET_THRESHOLD) {
+      setLEDColor(i, LOW, LOW, HIGH); // Blue = too wet
+    } 
+    else {
+      setLEDColor(i, LOW, HIGH, LOW); // Green = ideal
+}
+
 
     if (moistureValues[i] > DRY_THRESHOLD && !pumpRunning) {
       Serial.print("Soil too dry in sensor ");
@@ -124,10 +134,9 @@ void loop() {
   Serial.println(F("---------------------------------------"));
   uint16_t aqiValue = data.aqi_pm25_us;
   String category;
-
   if (aqiValue <= 50) category = "Good";
   else if (aqiValue <= 100) category = "Moderate";
-  else if (aqiValue <= 150) category = "Unhealthy for Sensitive Groups";
+  else if (aqiValue <= 150) category = "Unhealthy for Sensitive Plants";
   else if (aqiValue <= 200) category = "Unhealthy";
   else if (aqiValue <= 300) category = "Very Unhealthy";
   else category = "Hazardous";
