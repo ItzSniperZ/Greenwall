@@ -1,5 +1,6 @@
 #include <dht.h>
 #include "Adafruit_PM25AQI.h"
+#include <SoftwareSerial.h>
 
 // Digital Pins Free: {1, 32-43, 51-53} (16 pins)
 const int DHTPins[6] = {20, 21, 22, 23, 24, 25}; //pins for DHT sensors
@@ -16,6 +17,7 @@ const int DRY_THRESHOLD = 850; // limit for how dry rockwool can be before runni
 const int WET_THRESHOLD = 350; //limit to how dry the rockwool can be before stopping water
 unsigned long pumpStartTime = 0;
 bool pumpRunning = false;
+SoftwareSerial esp(10, 11); // RX, TX
 const unsigned long pumpDuration = 10000; // 10 seconds
 Adafruit_PM25AQI aqi = Adafruit_PM25AQI(); //air quality sensor
 dht DHTs[6]; //DHT sensor objects
@@ -35,6 +37,7 @@ void setWaterPump(int pin, int power) { // on/off control for water pump
 
 void setup() {
   Serial.begin(9600);
+  esp.begin(9600); // Default ESP8266 AT baud rate
   for (int i = 0; i < 6; i++) {
     pinMode(redPins[i], OUTPUT);
     pinMode(greenPins[i], OUTPUT);
@@ -49,6 +52,9 @@ void setup() {
   }
   pinMode(waterPumpPin, OUTPUT);
   digitalWrite(waterPumpPin, LOW);
+
+  Serial.println("Testing ESP8266: ");
+  esp.println("AT");
 }
 
 void loop() {
@@ -146,5 +152,13 @@ void loop() {
   Serial.print(" → ");
   Serial.println(category);
   Serial.println("------------------------------------------------");
+
+  while (esp.available()) {
+    Serial.write(esp.read()); // Forward Serial Monitor input to ESP8266
+  }
+  while (Serial.available()) {
+    esp.write(Serial.read());
+  }
+  
   delay(2500); // Wait before next full set of readings
 }
