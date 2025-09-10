@@ -9,7 +9,8 @@ const int relayPins[6] = {26, 27, 28, 29, 30, 31}; //pins for relay sensors (fan
 const int redPins[6] = {2, 5, 8, 11, 44, 47}; //red LED pins
 const int greenPins[6] = {3, 6, 9, 12, 45, 48}; //green LED pins
 const int bluePins[6] = {4, 7, 10, 13, 46, 49}; //blue LED pins
-const int waterPumpPin = 50;
+const int waterPumpPin = 50; //relay for pump
+const int pumpButtonPin = 52;  //push button for demo
 const int photocellPin = A3;
 const int photoCellMin = 0; //minimum value for photo resistor
 const int photoCellMax = 1000; //max value for photo resistor
@@ -17,13 +18,19 @@ const int DRY_THRESHOLD = 850; // limit for how dry rockwool can be before runni
 const int WET_THRESHOLD = 350; //limit to how dry the rockwool can be before stopping water
 unsigned long pumpStartTime = 0;
 bool pumpRunning = false;
-SoftwareSerial esp(10, 11); // RX, TX
+SoftwareSerial esp(0, 1); // RX, TX
 const unsigned long pumpDuration = 10000; // 10 seconds
 Adafruit_PM25AQI aqi = Adafruit_PM25AQI(); //air quality sensor
 dht DHTs[6]; //DHT sensor objects
 int temperatures[6]; //array to store DHT temperature values
 int humidities[6]; //array to store DHT humidity values
 int moistureValues[6]; //array to store moisture values
+
+bool pumpToggleState = false;
+int lastButtonReading = HIGH;
+int stableButtonState = HIGH;
+unsigned long lastDebounce = 0;
+const unsigned long debounceDelay = 50;
 
 void setLEDColor(int stripIndex, int redVal, int greenVal, int blueVal) {
   digitalWrite(redPins[stripIndex], redVal);
@@ -52,6 +59,7 @@ void setup() {
   }
   pinMode(waterPumpPin, OUTPUT);
   digitalWrite(waterPumpPin, LOW);
+    pinMode(pumpButtonPin, INPUT_PULLUP);
 
   Serial.println("Testing ESP8266: ");
   esp.println("AT");
@@ -104,21 +112,38 @@ void loop() {
 }
 
 
-    if (moistureValues[i] > DRY_THRESHOLD && !pumpRunning) {
-      Serial.print("Soil too dry in sensor ");
-      Serial.print(i + 1);
-      Serial.println(" → Starting Pump");
-      setWaterPump(waterPumpPin, HIGH);
-      pumpRunning = true;
-      pumpStartTime = millis();
-      break; // stop checking others this cycle
-    }
+    // if (moistureValues[i] > DRY_THRESHOLD && !pumpRunning) {
+    //   Serial.print("Soil too dry in sensor ");
+    //   Serial.print(i + 1);
+    //   Serial.println(" → Starting Pump");
+    //   setWaterPump(waterPumpPin, HIGH);
+    //   pumpRunning = true;
+    //   pumpStartTime = millis();
+    //   break; // stop checking others this cycle
+    // }
   } 
-  if (pumpRunning && millis() - pumpStartTime >= pumpDuration) {
-    setWaterPump(waterPumpPin, LOW);
-    pumpRunning = false;
-    Serial.println("Pump cycle complete → Pump OFF");
+  // if (pumpRunning && millis() - pumpStartTime >= pumpDuration) {
+  //   setWaterPump(waterPumpPin, LOW);
+  //   pumpRunning = false;
+  //   Serial.println("Pump cycle complete → Pump OFF");
+  // }
+
+  int reading = digitalRead(pumpButtonPin); //Button state (for water pump)
+  if (reading != lastButtonReading) {
+    lastDebounce = millis();
   }
+  if (millis() - lastDebounce > debounceDelay) {
+    if (reading != stableButtonState) {
+      stableButtonState = reading;
+      if (stableButtonState == LOW) { // button pressed
+        pumpToggleState = !pumpToggleState;
+        setWaterPump(waterPumpPin, pumpToggleState ? HIGH : LOW); //toggle pump relay ON when state is true, OFF when false
+        Serial.print("Manual pump: ");
+        Serial.println(pumpToggleState ? "ON" : "OFF");
+      }
+    }
+  }
+  lastButtonReading = reading;
 
   int photoReading = analogRead(photocellPin);
   int lightPercent = map(photoReading, photoCellMin, photoCellMax, 0, 100); // Adjustments for photo cell sensitivity.
@@ -159,6 +184,6 @@ void loop() {
   while (Serial.available()) {
     esp.write(Serial.read());
   }
-  
+
   delay(2500); // Wait before next full set of readings
 }
