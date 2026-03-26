@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Greenwall — Greenhouse Monitor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    /* ═══════════════════════════════════════════
+       DESIGN SYSTEM — BIOPUNK / INDUSTRIAL GREEN
+       ═══════════════════════════════════════════ */
+    :root {
+      --bg:          #0a0f0a;
+      --bg-2:        #0f1a0f;
+      --bg-3:        #141f14;
+      --panel:       #111811;
+      --panel-2:     #182018;
+      --border:      #1e2e1e;
+      --border-2:    #2a3d2a;
+      --green-dim:   #1a4d2a;
+      --green:       #22c55e;
+      --green-glow:  #4ade80;
+      --green-muted: #16a34a;
+      --amber:       #f59e0b;
+      --amber-dim:   #451a03;
+      --red:         #ef4444;
+      --red-dim:     #3b0a0a;
+      --blue:        #38bdf8;
+      --blue-dim:    #0c2a3a;
+      --text:        #e2f0e2;
+      --text-2:      #8aab8a;
+      --text-3:      #4a6a4a;
+      --mono:        'Space Mono', monospace;
+      --sans:        'Syne', sans-serif;
+      --radius:      6px;
+      --radius-lg:   12px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Subtle grid texture overlay */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image:
+        linear-gradient(var(--border) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border) 1px, transparent 1px);
+      background-size: 40px 40px;
+      opacity: 0.3;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ─── HEADER ─── */
+    header {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(10,15,10,0.92);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border-2);
+      padding: 0 28px;
+      height: 64px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+
+    .logo {
+      display: flex; align-items: center; gap: 12px;
+    }
+
+    .logo-icon {
+      width: 32px; height: 32px;
+      background: var(--green-dim);
+      border: 1px solid var(--green-muted);
+      border-radius: var(--radius);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+    }
+
+    .logo h1 {
+      font-family: var(--sans);
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--green-glow);
+    }
+
+    .logo span {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--text-3);
+      letter-spacing: 1px;
+      display: block;
+      margin-top: -2px;
+    }
+
+    .header-right {
+      display: flex; align-items: center; gap: 20px;
+    }
+
+    .live-badge {
+      display: flex; align-items: center; gap: 6px;
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--green);
+      letter-spacing: 1px;
+    }
+
+    .live-dot {
+      width: 7px; height: 7px;
+      background: var(--green);
+      border-radius: 50%;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(34,197,94,0.4); }
+      50%       { opacity: 0.7; box-shadow: 0 0 0 5px rgba(34,197,94,0); }
+    }
+
+    .timestamp {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text-3);
+    }
+
+    /* ─── MAIN LAYOUT ─── */
+    main {
+      position: relative; z-index: 1;
+      padding: 28px;
+      display: flex; flex-direction: column; gap: 20px;
+      max-width: 1600px; margin: 0 auto;
+    }
+
+    /* ─── ALERTS BAR ─── */
+    #alerts-bar {
+      display: flex; gap: 10px; flex-wrap: wrap;
+    }
+
+    .alert-chip {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--red-dim);
+      border: 1px solid var(--red);
+      border-radius: 20px;
+      padding: 5px 12px;
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--red);
+      animation: alertPulse 2s ease-in-out infinite;
+    }
+
+    @keyframes alertPulse {
+      0%, 100% { border-color: var(--red); }
+      50%       { border-color: transparent; }
+    }
+
+    /* ─── SECTIONS GRID ─── */
+    .sections-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+
+    @media (max-width: 1100px) {
+      .sections-grid { grid-template-columns: 1fr; }
+    }
+
+    /* ─── SECTION CARD ─── */
+    .section-card {
+      background: var(--panel);
+      border: 1px solid var(--border-2);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      transition: border-color 0.3s;
+    }
+
+    .section-card:hover {
+      border-color: var(--green-muted);
+    }
+
+    .section-card.offline {
+      opacity: 0.5;
+      border-color: var(--border);
+    }
+
+    .section-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      background: var(--panel-2);
+    }
+
+    .section-title {
+      display: flex; align-items: center; gap: 12px;
+    }
+
+    .section-num {
+      width: 34px; height: 34px;
+      background: var(--green-dim);
+      border: 1px solid var(--green-muted);
+      border-radius: var(--radius);
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--mono);
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--green-glow);
+    }
+
+    .section-label h2 {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .section-label p {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--text-3);
+      margin-top: 1px;
+    }
+
+    .status-badge {
+      font-family: var(--mono);
+      font-size: 10px;
+      padding: 3px 9px;
+      border-radius: 20px;
+      letter-spacing: 1px;
+      font-weight: 700;
+    }
+
+    .status-badge.online {
+      background: var(--green-dim);
+      color: var(--green);
+      border: 1px solid var(--green-muted);
+    }
+
+    .status-badge.offline {
+      background: #1a1a1a;
+      color: var(--text-3);
+      border: 1px solid var(--border);
+    }
+
+    /* ─── SECTION METRICS ROW ─── */
+    .section-metrics {
+      display: flex; gap: 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .metric {
+      flex: 1;
+      padding: 12px 16px;
+      border-right: 1px solid var(--border);
+      display: flex; flex-direction: column; gap: 4px;
+    }
+
+    .metric:last-child { border-right: none; }
+
+    .metric-label {
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--text-3);
+    }
+
+    .metric-value {
+      font-family: var(--mono);
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1;
+    }
+
+    .metric-unit {
+      font-size: 11px;
+      color: var(--text-3);
+      font-weight: 400;
+    }
+
+    .metric-bar {
+      height: 3px;
+      background: var(--border-2);
+      border-radius: 2px;
+      margin-top: 2px;
+      overflow: hidden;
+    }
+
+    .metric-bar-fill {
+      height: 100%;
+      border-radius: 2px;
+      background: var(--green);
+      transition: width 0.6s ease;
+    }
+
+    .pump-on  { color: var(--blue) !important; }
+    .pump-off { color: var(--text-3) !important; }
+
+    /* ─── CELLS GRID ─── */
+    .cells-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      background: var(--border);
+      padding: 0;
+    }
+
+    /* ─── CELL CARD ─── */
+    .cell-card {
+      background: var(--panel);
+      padding: 14px;
+      cursor: pointer;
+      transition: background 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cell-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: transparent;
+      transition: background 0.3s;
+    }
+
+    .cell-card:hover { background: var(--panel-2); }
+
+    .cell-card:hover::before { background: var(--green); }
+
+    .cell-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .cell-num {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 1px;
+      color: var(--text-3);
+      text-transform: uppercase;
+    }
+
+    .moist-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .moist-dot.dry     { background: var(--red);   box-shadow: 0 0 6px var(--red); }
+    .moist-dot.optimal { background: var(--green);  box-shadow: 0 0 6px var(--green); }
+    .moist-dot.wet     { background: var(--blue);   box-shadow: 0 0 6px var(--blue); }
+
+    .cell-readings {
+      display: flex; flex-direction: column; gap: 6px;
+    }
+
+    .reading-row {
+      display: flex; align-items: center; justify-content: space-between;
+    }
+
+    .reading-icon {
+      font-size: 11px;
+      width: 18px;
+      color: var(--text-3);
+    }
+
+    .reading-val {
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .reading-val.warn { color: var(--amber); }
+    .reading-val.danger { color: var(--red); }
+
+    .moist-bar-wrap {
+      display: flex; align-items: center; gap: 6px;
+    }
+
+    .moist-bar {
+      flex: 1;
+      height: 3px;
+      background: var(--border-2);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .moist-bar-fill {
+      height: 100%;
+      border-radius: 2px;
+      transition: width 0.6s ease, background 0.3s;
+    }
+
+    /* ─── MODAL ─── */
+    .modal-overlay {
+      position: fixed; inset: 0; z-index: 200;
+      background: rgba(0,0,0,0.85);
+      backdrop-filter: blur(8px);
+      display: flex; align-items: center; justify-content: center;
+      padding: 20px;
+      animation: fadeIn 0.2s ease;
+    }
+
+    .modal-overlay.hidden { display: none; }
+
+    @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
+
+    .modal {
+      background: var(--panel);
+      border: 1px solid var(--border-2);
+      border-radius: var(--radius-lg);
+      width: 100%; max-width: 520px;
+      overflow: hidden;
+      animation: slideUp 0.25s ease;
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(20px); opacity: 0 }
+      to   { transform: translateY(0); opacity: 1 }
+    }
+
+    .modal-header {
+      padding: 20px 24px;
+      background: var(--panel-2);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+
+    .modal-header h3 {
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .modal-close {
+      background: none; border: 1px solid var(--border-2);
+      color: var(--text-3); cursor: pointer;
+      width: 30px; height: 30px;
+      border-radius: var(--radius);
+      font-size: 16px;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .modal-close:hover {
+      border-color: var(--red);
+      color: var(--red);
+    }
+
+    .modal-body {
+      padding: 24px;
+      display: flex; flex-direction: column; gap: 20px;
+    }
+
+    .modal-stat-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+    }
+
+    .modal-stat {
+      background: var(--bg-3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      text-align: center;
+    }
+
+    .modal-stat .s-label {
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--text-3);
+      margin-bottom: 8px;
+    }
+
+    .modal-stat .s-val {
+      font-family: var(--mono);
+      font-size: 26px;
+      font-weight: 700;
+    }
+
+    .modal-stat .s-unit {
+      font-size: 12px;
+      color: var(--text-3);
+    }
+
+    .chart-placeholder {
+      background: var(--bg-3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      height: 120px;
+      display: flex; align-items: center; justify-content: center;
+      flex-direction: column; gap: 6px;
+      color: var(--text-3);
+      font-family: var(--mono);
+      font-size: 11px;
+    }
+
+    .chart-placeholder span { font-size: 22px; opacity: 0.4; }
+
+    /* ─── LOADING STATE ─── */
+    .loading-screen {
+      position: fixed; inset: 0; z-index: 300;
+      background: var(--bg);
+      display: flex; align-items: center; justify-content: center;
+      flex-direction: column; gap: 16px;
+      transition: opacity 0.5s;
+    }
+
+    .loading-screen.done { opacity: 0; pointer-events: none; }
+
+    .loading-logo {
+      font-family: var(--sans);
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: 4px;
+      color: var(--green-glow);
+    }
+
+    .loading-bar-wrap {
+      width: 200px; height: 2px;
+      background: var(--border-2);
+      border-radius: 2px; overflow: hidden;
+    }
+
+    .loading-bar-fill {
+      height: 100%;
+      background: var(--green);
+      border-radius: 2px;
+      animation: loadBar 1.5s ease forwards;
+    }
+
+    @keyframes loadBar { from { width: 0 } to { width: 100% } }
+
+    .error-notice {
+      background: var(--amber-dim);
+      border: 1px solid var(--amber);
+      color: var(--amber);
+      border-radius: var(--radius);
+      padding: 10px 16px;
+      font-family: var(--mono);
+      font-size: 12px;
+      display: none;
+    }
+
+    .error-notice.show { display: block; }
+  </style>
+</head>
+<body>
+
+<!-- Loading Screen -->
+<div class="loading-screen" id="loading-screen">
+  <div class="loading-logo">GREENWALL</div>
+  <div class="loading-bar-wrap"><div class="loading-bar-fill"></div></div>
+  <div style="font-family:var(--mono);font-size:11px;color:var(--text-3);letter-spacing:2px;">INITIALIZING SENSORS</div>
+</div>
+
+<!-- App Shell -->
+<header>
+  <div class="logo">
+    <div class="logo-icon">🌿</div>
+    <div>
+      <h1>Greenwall</h1>
+      <span>GREENHOUSE MONITORING SYSTEM</span>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="live-badge">
+      <div class="live-dot"></div>
+      LIVE
+    </div>
+    <div class="timestamp" id="timestamp">--:--:--</div>
+  </div>
+</header>
+
+<main>
+  <!-- Error notice -->
+  <div class="error-notice" id="error-notice">
+    ⚠ Cannot reach backend at <span id="api-url-display"></span> — check that Flask is running on the Pi.
+  </div>
+
+  <!-- Alerts -->
+  <div id="alerts-bar"></div>
+
+  <!-- Sections Grid -->
+  <div class="sections-grid" id="sections-grid">
+    <!-- Rendered by JS -->
+  </div>
+</main>
+
+<!-- Cell Detail Modal -->
+<div class="modal-overlay hidden" id="modal-overlay">
+  <div class="modal" id="modal">
+    <div class="modal-header">
+      <h3 id="modal-title">Cell Detail</h3>
+      <button class="modal-close" id="modal-close">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-stat-grid" id="modal-stats"></div>
+      <div class="chart-placeholder">
+        <span>📈</span>
+        Historical charts — coming soon
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+// CONFIG — Update API_BASE to point at your Pi
+// ─────────────────────────────────────────────
+const API_BASE = "http://localhost:5000"; // e.g. "http://192.168.1.50:5000"
+const REFRESH_MS = 3000;
+
+document.getElementById("api-url-display").textContent = API_BASE + "/api/data";
+
+// ─────────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────────
+let allData = [];
+let useDemoData = false; // flips to true if API is unreachable
+
+// ─────────────────────────────────────────────
+// SENSOR THRESHOLDS
+// ─────────────────────────────────────────────
+const TEMP_LOW = 18, TEMP_HIGH = 28;
+const MOIST_DRY = 700, MOIST_WET = 400; // raw analog: lower=wetter
+
+function moistureClass(raw) {
+  if (raw > MOIST_DRY) return "dry";
+  if (raw < MOIST_WET) return "wet";
+  return "optimal";
+}
+
+// Normalize moisture: 0=dry, 100=wet (just for the progress bar)
+function moistPct(raw) {
+  const val = Math.max(0, Math.min(1023, raw));
+  return Math.round(((1023 - val) / 1023) * 100);
+}
+
+function moistColor(cls) {
+  return cls === "dry" ? "#ef4444" : cls === "wet" ? "#38bdf8" : "#22c55e";
+}
+
+function tempClass(t) {
+  if (t < TEMP_LOW - 3 || t > TEMP_HIGH + 3) return "danger";
+  if (t < TEMP_LOW || t > TEMP_HIGH) return "warn";
+  return "";
+}
+
+// ─────────────────────────────────────────────
+// DEMO DATA (used when Flask is not reachable)
+// ─────────────────────────────────────────────
+function makeDemoData() {
+  const r = (a, b) => +(Math.random() * (b - a) + a).toFixed(1);
+  return [1,2,3,4].map(id => ({
+    board_id: id,
+    online: true,
+    last_updated: new Date().toISOString(),
+    light: r(30, 95),
+    aqi: r(10, 80),
+    pump: Math.random() < 0.2 ? 1 : 0,
+    cells: [1,2,3,4,5,6].map(c => ({
+      cell: c,
+      temp: r(17, 32),
+      hum: r(40, 80),
+      moist: Math.floor(Math.random() * 700 + 200),
+    }))
+  }));
+}
+
+// ─────────────────────────────────────────────
+// FETCH DATA
+// ─────────────────────────────────────────────
+async function fetchData() {
+  if (useDemoData) {
+    allData = makeDemoData();
+    renderAll();
+    return;
+  }
+  try {
+    const res = await fetch(`${API_BASE}/api/data`, { signal: AbortSignal.timeout(4000) });
+    if (!res.ok) throw new Error("bad response");
+    allData = await res.json();
+    document.getElementById("error-notice").classList.remove("show");
+    renderAll();
+  } catch (e) {
+    document.getElementById("error-notice").classList.add("show");
+    // Fall back to demo data so UI is still usable
+    useDemoData = true;
+    allData = makeDemoData();
+    renderAll();
+  }
+}
+
+// ─────────────────────────────────────────────
+// RENDER HELPERS
+// ─────────────────────────────────────────────
+function renderAll() {
+  renderSections();
+  renderAlerts();
+  updateTimestamp();
+}
+
+function updateTimestamp() {
+  document.getElementById("timestamp").textContent = new Date().toLocaleTimeString();
+}
+
+function renderAlerts() {
+  const bar = document.getElementById("alerts-bar");
+  const alerts = [];
+  allData.forEach(section => {
+    section.cells?.forEach(cell => {
+      const mc = moistureClass(cell.moist);
+      if (mc === "dry")  alerts.push(`S${section.board_id}·C${cell.cell}: Soil dry`);
+      if (mc === "wet")  alerts.push(`S${section.board_id}·C${cell.cell}: Overwatered`);
+      if (tempClass(cell.temp) === "danger") alerts.push(`S${section.board_id}·C${cell.cell}: Temp ${cell.temp}°C`);
+    });
+    if (section.aqi > 60) alerts.push(`Section ${section.board_id}: High AQI ${section.aqi}`);
+  });
+  bar.innerHTML = alerts.map(a => `<div class="alert-chip">⚠ ${a}</div>`).join("");
+}
+
+function renderSections() {
+  const grid = document.getElementById("sections-grid");
+  grid.innerHTML = allData.map(s => renderSection(s)).join("");
+}
+
+function renderSection(s) {
+  const online = s.online !== false;
+  const pumpClass = s.pump ? "pump-on" : "pump-off";
+  const pumpLabel = s.pump ? "ON" : "OFF";
+
+  const cells = (s.cells || []).map(c => renderCell(c, s.board_id)).join("");
+
+  return `
+    <div class="section-card ${online ? "" : "offline"}">
+      <div class="section-header">
+        <div class="section-title">
+          <div class="section-num">S${s.board_id}</div>
+          <div class="section-label">
+            <h2>Section ${s.board_id}</h2>
+            <p>BOARD ID ${s.board_id} · 6 CELLS</p>
+          </div>
+        </div>
+        <span class="status-badge ${online ? "online" : "offline"}">${online ? "ONLINE" : "OFFLINE"}</span>
+      </div>
+
+      <div class="section-metrics">
+        <div class="metric">
+          <div class="metric-label">LIGHT</div>
+          <div class="metric-value">${s.light}<span class="metric-unit">%</span></div>
+          <div class="metric-bar"><div class="metric-bar-fill" style="width:${s.light}%"></div></div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">AQI PM2.5</div>
+          <div class="metric-value" style="color:${s.aqi > 60 ? 'var(--red)' : s.aqi > 35 ? 'var(--amber)' : 'var(--green)'}">${s.aqi}</div>
+          <div class="metric-bar"><div class="metric-bar-fill" style="width:${Math.min(s.aqi,100)}%;background:${s.aqi > 60 ? 'var(--red)' : s.aqi > 35 ? 'var(--amber)' : 'var(--green)'}"></div></div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">PUMP</div>
+          <div class="metric-value ${pumpClass}">💧 ${pumpLabel}</div>
+        </div>
+      </div>
+
+      <div class="cells-grid">
+        ${cells}
+      </div>
+    </div>
+  `;
+}
+
+function renderCell(c, boardId) {
+  const mc = moistureClass(c.moist);
+  const tc = tempClass(c.temp);
+  const mp = moistPct(c.moist);
+
+  return `
+    <div class="cell-card" onclick="openModal(${boardId}, ${c.cell})">
+      <div class="cell-header">
+        <span class="cell-num">CELL ${c.cell}</span>
+        <div class="moist-dot ${mc}"></div>
+      </div>
+      <div class="cell-readings">
+        <div class="reading-row">
+          <span class="reading-icon">🌡</span>
+          <span class="reading-val ${tc}">${c.temp}°C</span>
+        </div>
+        <div class="reading-row">
+          <span class="reading-icon">💧</span>
+          <span class="reading-val">${c.hum}%</span>
+        </div>
+        <div class="moist-bar-wrap">
+          <span class="reading-icon">🪴</span>
+          <div class="moist-bar">
+            <div class="moist-bar-fill" style="width:${mp}%;background:${moistColor(mc)}"></div>
+          </div>
+          <span class="reading-val" style="color:${moistColor(mc)};font-size:11px;min-width:32px;text-align:right">${mp}%</span>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// ─────────────────────────────────────────────
+// MODAL
+// ─────────────────────────────────────────────
+function openModal(boardId, cellNum) {
+  const section = allData.find(s => s.board_id === boardId);
+  if (!section) return;
+  const cell = section.cells.find(c => c.cell === cellNum);
+  if (!cell) return;
+
+  const mc = moistureClass(cell.moist);
+  const mp = moistPct(cell.moist);
+  const tc = tempClass(cell.temp);
+
+  document.getElementById("modal-title").textContent = `Section ${boardId} · Cell ${cellNum}`;
+  document.getElementById("modal-stats").innerHTML = `
+    <div class="modal-stat">
+      <div class="s-label">Temperature</div>
+      <div class="s-val" style="color:${tc === 'danger' ? 'var(--red)' : tc === 'warn' ? 'var(--amber)' : 'var(--green-glow)'}">${cell.temp}<span class="s-unit">°C</span></div>
+      <div style="font-family:var(--mono);font-size:9px;color:var(--text-3);margin-top:6px">IDEAL: ${TEMP_LOW}–${TEMP_HIGH}°C</div>
+    </div>
+    <div class="modal-stat">
+      <div class="s-label">Humidity</div>
+      <div class="s-val" style="color:var(--blue)">${cell.hum}<span class="s-unit">%</span></div>
+      <div style="font-family:var(--mono);font-size:9px;color:var(--text-3);margin-top:6px">RELATIVE</div>
+    </div>
+    <div class="modal-stat">
+      <div class="s-label">Soil Moisture</div>
+      <div class="s-val" style="color:${moistColor(mc)}">${mp}<span class="s-unit">%</span></div>
+      <div style="font-family:var(--mono);font-size:9px;color:${moistColor(mc)};margin-top:6px;text-transform:uppercase">${mc}</div>
+    </div>
+  `;
+
+  document.getElementById("modal-overlay").classList.remove("hidden");
+}
+
+document.getElementById("modal-close").addEventListener("click", () => {
+  document.getElementById("modal-overlay").classList.add("hidden");
+});
+
+document.getElementById("modal-overlay").addEventListener("click", (e) => {
+  if (e.target === document.getElementById("modal-overlay")) {
+    document.getElementById("modal-overlay").classList.add("hidden");
+  }
+});
+
+// ─────────────────────────────────────────────
+// STARTUP + POLLING
+// ─────────────────────────────────────────────
+window.addEventListener("load", () => {
+  setTimeout(() => {
+    document.getElementById("loading-screen").classList.add("done");
+    setTimeout(() => document.getElementById("loading-screen").remove(), 600);
+  }, 1600);
+
+  fetchData();
+  setInterval(fetchData, REFRESH_MS);
+});
+</script>
+</body>
+</html>
