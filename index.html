@@ -8,33 +8,39 @@
   <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
   <style>
     /* ═══════════════════════════════════════════
-       DESIGN SYSTEM — BIOPUNK / INDUSTRIAL GREEN
+       DESIGN SYSTEM — LIGHT / WHITE, VERTICAL
        ═══════════════════════════════════════════ */
     :root {
-      --bg:          #0a0f0a;
-      --bg-2:        #0f1a0f;
-      --bg-3:        #141f14;
-      --panel:       #111811;
-      --panel-2:     #182018;
-      --border:      #1e2e1e;
-      --border-2:    #2a3d2a;
-      --green-dim:   #1a4d2a;
-      --green:       #22c55e;
-      --green-glow:  #4ade80;
-      --green-muted: #16a34a;
-      --amber:       #f59e0b;
-      --amber-dim:   #451a03;
-      --red:         #ef4444;
-      --red-dim:     #3b0a0a;
-      --blue:        #38bdf8;
-      --blue-dim:    #0c2a3a;
-      --text:        #e2f0e2;
-      --text-2:      #8aab8a;
-      --text-3:      #4a6a4a;
+      --bg:          #f4f7f4;
+      --bg-2:        #edf2ed;
+      --panel:       #ffffff;
+      --panel-2:     #f8fbf8;
+      --border:      #dde8dd;
+      --border-2:    #ccdacc;
+
+      --green:       #1a7a3a;
+      --green-light: #e6f5ec;
+      --green-mid:   #2ea65a;
+
+      --red:         #c0392b;
+      --red-light:   #fdecea;
+
+      --amber:       #b45309;
+      --amber-light: #fef3e2;
+
+      --blue:        #1565c0;
+      --blue-light:  #e8f0fe;
+
+      --text:        #111a11;
+      --text-2:      #3a4f3a;
+      --text-3:      #6b856b;
+
       --mono:        'Space Mono', monospace;
       --sans:        'Syne', sans-serif;
-      --radius:      6px;
-      --radius-lg:   12px;
+      --radius:      8px;
+      --radius-lg:   14px;
+      --shadow:      0 1px 4px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.05);
+      --shadow-hover:0 2px 8px rgba(0,0,0,0.12), 0 8px 24px rgba(0,0,0,0.08);
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -47,55 +53,42 @@
       overflow-x: hidden;
     }
 
-    /* Subtle grid texture overlay */
-    body::before {
-      content: '';
-      position: fixed; inset: 0;
-      background-image:
-        linear-gradient(var(--border) 1px, transparent 1px),
-        linear-gradient(90deg, var(--border) 1px, transparent 1px);
-      background-size: 40px 40px;
-      opacity: 0.3;
-      pointer-events: none;
-      z-index: 0;
-    }
-
     /* ─── HEADER ─── */
     header {
       position: sticky; top: 0; z-index: 100;
-      background: rgba(10,15,10,0.92);
-      backdrop-filter: blur(16px);
-      border-bottom: 1px solid var(--border-2);
+      background: var(--panel);
+      border-bottom: 2px solid var(--border-2);
       padding: 0 28px;
-      height: 64px;
+      height: 72px;
       display: flex; align-items: center; justify-content: space-between;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
     }
 
     .logo {
-      display: flex; align-items: center; gap: 12px;
+      display: flex; align-items: center; gap: 14px;
     }
 
     .logo-icon {
-      width: 32px; height: 32px;
-      background: var(--green-dim);
-      border: 1px solid var(--green-muted);
+      width: 40px; height: 40px;
+      background: var(--green-light);
+      border: 1.5px solid var(--green);
       border-radius: var(--radius);
       display: flex; align-items: center; justify-content: center;
-      font-size: 16px;
+      font-size: 20px;
     }
 
     .logo h1 {
       font-family: var(--sans);
-      font-size: 20px;
+      font-size: 26px;
       font-weight: 800;
-      letter-spacing: 2px;
+      letter-spacing: 3px;
       text-transform: uppercase;
-      color: var(--green-glow);
+      color: var(--green);
     }
 
     .logo span {
       font-family: var(--mono);
-      font-size: 10px;
+      font-size: 11px;
       color: var(--text-3);
       letter-spacing: 1px;
       display: block;
@@ -103,170 +96,162 @@
     }
 
     .header-right {
-      display: flex; align-items: center; gap: 20px;
+      display: flex; align-items: center; gap: 18px;
     }
 
     .live-badge {
       display: flex; align-items: center; gap: 6px;
       font-family: var(--mono);
-      font-size: 11px;
+      font-size: 13px;
       color: var(--green);
       letter-spacing: 1px;
+      background: var(--green-light);
+      border: 1px solid var(--green-mid);
+      border-radius: 20px;
+      padding: 5px 14px;
     }
 
     .live-dot {
-      width: 7px; height: 7px;
+      width: 8px; height: 8px;
       background: var(--green);
       border-radius: 50%;
       animation: pulse 2s ease-in-out infinite;
     }
 
     @keyframes pulse {
-      0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(34,197,94,0.4); }
-      50%       { opacity: 0.7; box-shadow: 0 0 0 5px rgba(34,197,94,0); }
+      0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(26,122,58,0.3); }
+      50%       { opacity: 0.6; box-shadow: 0 0 0 4px rgba(26,122,58,0); }
     }
 
     .timestamp {
       font-family: var(--mono);
-      font-size: 11px;
+      font-size: 14px;
       color: var(--text-3);
     }
 
-    /* ─── MAIN LAYOUT ─── */
+    /* ─── MAIN — full width, vertical monitor ─── */
     main {
       position: relative; z-index: 1;
-      padding: 28px;
-      display: flex; flex-direction: column; gap: 20px;
-      max-width: 1600px; margin: 0 auto;
+      padding: 20px;
+      display: flex; flex-direction: column; gap: 18px;
     }
 
     /* ─── ALERTS BAR ─── */
     #alerts-bar {
-      display: flex; gap: 10px; flex-wrap: wrap;
+      display: flex; gap: 8px; flex-wrap: wrap;
     }
 
     .alert-chip {
-      display: flex; align-items: center; gap: 8px;
-      background: var(--red-dim);
-      border: 1px solid var(--red);
+      display: flex; align-items: center; gap: 6px;
+      background: var(--red-light);
+      border: 1.5px solid var(--red);
       border-radius: 20px;
-      padding: 5px 12px;
+      padding: 4px 11px;
       font-family: var(--mono);
-      font-size: 11px;
+      font-size: 10px;
       color: var(--red);
-      animation: alertPulse 2s ease-in-out infinite;
+      font-weight: 700;
+      animation: alertPulse 2.5s ease-in-out infinite;
     }
 
     @keyframes alertPulse {
       0%, 100% { border-color: var(--red); }
-      50%       { border-color: transparent; }
-    }
-
-    /* ─── SECTIONS GRID ─── */
-    .sections-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 20px;
-    }
-
-    @media (max-width: 1100px) {
-      .sections-grid { grid-template-columns: 1fr; }
+      50%       { border-color: #e8a09a; }
     }
 
     /* ─── SECTION CARD ─── */
     .section-card {
       background: var(--panel);
-      border: 1px solid var(--border-2);
+      border: 1.5px solid var(--border-2);
       border-radius: var(--radius-lg);
       overflow: hidden;
-      transition: border-color 0.3s;
+      box-shadow: var(--shadow);
+      transition: box-shadow 0.2s, border-color 0.2s;
     }
 
     .section-card:hover {
-      border-color: var(--green-muted);
+      box-shadow: var(--shadow-hover);
+      border-color: var(--green-mid);
     }
 
-    .section-card.offline {
-      opacity: 0.5;
-      border-color: var(--border);
-    }
+    .section-card.offline { opacity: 0.45; }
 
     .section-header {
-      padding: 16px 20px;
-      border-bottom: 1px solid var(--border);
+      padding: 18px 24px;
+      border-bottom: 1.5px solid var(--border);
       display: flex; align-items: center; justify-content: space-between;
       background: var(--panel-2);
     }
 
     .section-title {
-      display: flex; align-items: center; gap: 12px;
+      display: flex; align-items: center; gap: 14px;
     }
 
     .section-num {
-      width: 34px; height: 34px;
-      background: var(--green-dim);
-      border: 1px solid var(--green-muted);
+      width: 44px; height: 44px;
+      background: var(--green);
       border-radius: var(--radius);
       display: flex; align-items: center; justify-content: center;
       font-family: var(--mono);
-      font-size: 14px;
+      font-size: 17px;
       font-weight: 700;
-      color: var(--green-glow);
+      color: #fff;
     }
 
     .section-label h2 {
-      font-size: 15px;
+      font-size: 18px;
       font-weight: 700;
       letter-spacing: 1px;
       text-transform: uppercase;
+      color: var(--text);
     }
 
     .section-label p {
       font-family: var(--mono);
-      font-size: 10px;
+      font-size: 11px;
       color: var(--text-3);
-      margin-top: 1px;
+      margin-top: 2px;
     }
 
     .status-badge {
       font-family: var(--mono);
-      font-size: 10px;
-      padding: 3px 9px;
+      font-size: 11px;
+      padding: 5px 12px;
       border-radius: 20px;
       letter-spacing: 1px;
       font-weight: 700;
     }
 
     .status-badge.online {
-      background: var(--green-dim);
+      background: var(--green-light);
       color: var(--green);
-      border: 1px solid var(--green-muted);
+      border: 1px solid var(--green-mid);
     }
 
     .status-badge.offline {
-      background: #1a1a1a;
-      color: var(--text-3);
-      border: 1px solid var(--border);
+      background: #f0f0f0;
+      color: #999;
+      border: 1px solid #ddd;
     }
 
     /* ─── SECTION METRICS ROW ─── */
     .section-metrics {
-      display: flex; gap: 0;
-      border-bottom: 1px solid var(--border);
+      display: flex;
+      border-bottom: 1.5px solid var(--border);
     }
 
     .metric {
       flex: 1;
-      padding: 12px 16px;
+      padding: 14px 20px;
       border-right: 1px solid var(--border);
-      display: flex; flex-direction: column; gap: 4px;
+      display: flex; flex-direction: column; gap: 5px;
     }
 
     .metric:last-child { border-right: none; }
 
     .metric-label {
       font-family: var(--mono);
-      font-size: 9px;
+      font-size: 10px;
       letter-spacing: 1.5px;
       text-transform: uppercase;
       color: var(--text-3);
@@ -274,29 +259,29 @@
 
     .metric-value {
       font-family: var(--mono);
-      font-size: 18px;
+      font-size: 24px;
       font-weight: 700;
       color: var(--text);
       line-height: 1;
     }
 
     .metric-unit {
-      font-size: 11px;
+      font-size: 13px;
       color: var(--text-3);
       font-weight: 400;
     }
 
     .metric-bar {
-      height: 3px;
-      background: var(--border-2);
-      border-radius: 2px;
-      margin-top: 2px;
+      height: 5px;
+      background: var(--border);
+      border-radius: 3px;
+      margin-top: 4px;
       overflow: hidden;
     }
 
     .metric-bar-fill {
       height: 100%;
-      border-radius: 2px;
+      border-radius: 3px;
       background: var(--green);
       transition: width 0.6s ease;
     }
@@ -304,108 +289,121 @@
     .pump-on  { color: var(--blue) !important; }
     .pump-off { color: var(--text-3) !important; }
 
-    /* ─── CELLS GRID ─── */
+    /* ─── CELLS GRID — 3 columns ─── */
     .cells-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 1px;
+      gap: 0;
       background: var(--border);
-      padding: 0;
     }
 
     /* ─── CELL CARD ─── */
     .cell-card {
       background: var(--panel);
-      padding: 14px;
+      padding: 16px 18px;
       cursor: pointer;
-      transition: background 0.2s;
+      transition: background 0.15s;
       position: relative;
-      overflow: hidden;
+      border-top: 1px solid var(--border);
     }
 
-    .cell-card::before {
+    .cell-card::after {
       content: '';
       position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 2px;
+      bottom: 0; left: 0; right: 0;
+      height: 3px;
       background: transparent;
-      transition: background 0.3s;
+      transition: background 0.2s;
     }
 
     .cell-card:hover { background: var(--panel-2); }
-
-    .cell-card:hover::before { background: var(--green); }
+    .cell-card:hover::after { background: var(--green); }
 
     .cell-header {
       display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 10px;
+      margin-bottom: 12px;
     }
 
     .cell-num {
       font-family: var(--mono);
-      font-size: 10px;
+      font-size: 11px;
       letter-spacing: 1px;
       color: var(--text-3);
       text-transform: uppercase;
+      font-weight: 700;
     }
 
     .moist-dot {
-      width: 8px; height: 8px;
+      width: 12px; height: 12px;
       border-radius: 50%;
       flex-shrink: 0;
     }
 
-    .moist-dot.dry     { background: var(--red);   box-shadow: 0 0 6px var(--red); }
-    .moist-dot.optimal { background: var(--green);  box-shadow: 0 0 6px var(--green); }
-    .moist-dot.wet     { background: var(--blue);   box-shadow: 0 0 6px var(--blue); }
+    .moist-dot.dry     { background: var(--red);   box-shadow: 0 0 0 3px var(--red-light); }
+    .moist-dot.optimal { background: var(--green);  box-shadow: 0 0 0 3px var(--green-light); }
+    .moist-dot.wet     { background: var(--blue);   box-shadow: 0 0 0 3px var(--blue-light); }
 
     .cell-readings {
-      display: flex; flex-direction: column; gap: 6px;
+      display: flex; flex-direction: column; gap: 0;
     }
 
     .reading-row {
       display: flex; align-items: center; justify-content: space-between;
+      padding: 7px 0;
+      border-bottom: 1px solid var(--border);
     }
 
-    .reading-icon {
+    .reading-row:last-child { border-bottom: none; }
+
+    .reading-label {
+      font-family: var(--mono);
       font-size: 11px;
-      width: 18px;
       color: var(--text-3);
+      letter-spacing: 0.5px;
+      display: flex; align-items: center; gap: 5px;
     }
 
     .reading-val {
       font-family: var(--mono);
-      font-size: 13px;
+      font-size: 16px;
       font-weight: 700;
       color: var(--text);
     }
 
-    .reading-val.warn { color: var(--amber); }
+    .reading-val.warn   { color: var(--amber); }
     .reading-val.danger { color: var(--red); }
 
-    .moist-bar-wrap {
-      display: flex; align-items: center; gap: 6px;
-    }
-
     .moist-bar {
-      flex: 1;
-      height: 3px;
-      background: var(--border-2);
-      border-radius: 2px;
+      height: 8px;
+      background: var(--border);
+      border-radius: 4px;
       overflow: hidden;
     }
 
     .moist-bar-fill {
-      height: 100%;
-      border-radius: 2px;
+      height: 100%; border-radius: 4px;
       transition: width 0.6s ease, background 0.3s;
     }
+
+    /* ─── ERROR NOTICE ─── */
+    .error-notice {
+      background: var(--amber-light);
+      border: 1.5px solid var(--amber);
+      color: var(--amber);
+      border-radius: var(--radius);
+      padding: 9px 14px;
+      font-family: var(--mono);
+      font-size: 11px;
+      display: none;
+    }
+
+    .error-notice.show { display: block; }
 
     /* ─── MODAL ─── */
     .modal-overlay {
       position: fixed; inset: 0; z-index: 200;
-      background: rgba(0,0,0,0.85);
-      backdrop-filter: blur(8px);
+      background: rgba(0,0,0,0.35);
+      backdrop-filter: blur(6px);
       display: flex; align-items: center; justify-content: center;
       padding: 20px;
       animation: fadeIn 0.2s ease;
@@ -417,156 +415,135 @@
 
     .modal {
       background: var(--panel);
-      border: 1px solid var(--border-2);
+      border: 1.5px solid var(--border-2);
       border-radius: var(--radius-lg);
-      width: 100%; max-width: 520px;
+      width: 100%; max-width: 480px;
       overflow: hidden;
-      animation: slideUp 0.25s ease;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.18);
+      animation: slideUp 0.22s ease;
     }
 
     @keyframes slideUp {
-      from { transform: translateY(20px); opacity: 0 }
+      from { transform: translateY(16px); opacity: 0 }
       to   { transform: translateY(0); opacity: 1 }
     }
 
     .modal-header {
-      padding: 20px 24px;
+      padding: 18px 22px;
       background: var(--panel-2);
-      border-bottom: 1px solid var(--border);
+      border-bottom: 1.5px solid var(--border);
       display: flex; align-items: center; justify-content: space-between;
     }
 
     .modal-header h3 {
-      font-size: 16px;
-      font-weight: 700;
-      letter-spacing: 1px;
-      text-transform: uppercase;
+      font-size: 14px; font-weight: 700;
+      letter-spacing: 1px; text-transform: uppercase;
+      color: var(--text);
     }
 
     .modal-close {
-      background: none; border: 1px solid var(--border-2);
+      background: none; border: 1.5px solid var(--border-2);
       color: var(--text-3); cursor: pointer;
-      width: 30px; height: 30px;
-      border-radius: var(--radius);
-      font-size: 16px;
+      width: 28px; height: 28px;
+      border-radius: var(--radius); font-size: 14px;
       display: flex; align-items: center; justify-content: center;
-      transition: all 0.2s;
+      transition: all 0.15s;
     }
 
     .modal-close:hover {
-      border-color: var(--red);
-      color: var(--red);
+      border-color: var(--red); color: var(--red);
+      background: var(--red-light);
     }
 
     .modal-body {
-      padding: 24px;
-      display: flex; flex-direction: column; gap: 20px;
+      padding: 20px;
+      display: flex; flex-direction: column; gap: 16px;
     }
 
     .modal-stat-grid {
-      display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
     }
 
     .modal-stat {
-      background: var(--bg-3);
-      border: 1px solid var(--border);
+      background: var(--bg);
+      border: 1.5px solid var(--border);
       border-radius: var(--radius);
-      padding: 16px;
-      text-align: center;
+      padding: 14px 12px; text-align: center;
     }
 
     .modal-stat .s-label {
-      font-family: var(--mono);
-      font-size: 9px;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      color: var(--text-3);
-      margin-bottom: 8px;
+      font-family: var(--mono); font-size: 8px;
+      letter-spacing: 2px; text-transform: uppercase;
+      color: var(--text-3); margin-bottom: 8px;
     }
 
     .modal-stat .s-val {
-      font-family: var(--mono);
-      font-size: 26px;
-      font-weight: 700;
+      font-family: var(--mono); font-size: 24px;
+      font-weight: 700; line-height: 1;
     }
 
-    .modal-stat .s-unit {
-      font-size: 12px;
-      color: var(--text-3);
+    .modal-stat .s-unit { font-size: 12px; color: var(--text-3); }
+
+    .modal-stat .s-note {
+      font-family: var(--mono); font-size: 8px;
+      color: var(--text-3); margin-top: 6px;
     }
 
     .chart-placeholder {
-      background: var(--bg-3);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      height: 120px;
+      background: var(--bg);
+      border: 1.5px dashed var(--border-2);
+      border-radius: var(--radius); height: 100px;
       display: flex; align-items: center; justify-content: center;
-      flex-direction: column; gap: 6px;
-      color: var(--text-3);
-      font-family: var(--mono);
-      font-size: 11px;
+      flex-direction: column; gap: 5px;
+      color: var(--text-3); font-family: var(--mono); font-size: 10px;
     }
 
-    .chart-placeholder span { font-size: 22px; opacity: 0.4; }
+    .chart-placeholder span { font-size: 20px; opacity: 0.5; }
 
-    /* ─── LOADING STATE ─── */
+    /* ─── LOADING ─── */
     .loading-screen {
       position: fixed; inset: 0; z-index: 300;
-      background: var(--bg);
+      background: var(--panel);
       display: flex; align-items: center; justify-content: center;
-      flex-direction: column; gap: 16px;
-      transition: opacity 0.5s;
+      flex-direction: column; gap: 14px;
+      transition: opacity 0.4s;
     }
 
     .loading-screen.done { opacity: 0; pointer-events: none; }
 
     .loading-logo {
-      font-family: var(--sans);
-      font-size: 32px;
-      font-weight: 800;
-      letter-spacing: 4px;
-      color: var(--green-glow);
+      font-family: var(--sans); font-size: 28px;
+      font-weight: 800; letter-spacing: 4px; color: var(--green);
     }
 
     .loading-bar-wrap {
-      width: 200px; height: 2px;
-      background: var(--border-2);
-      border-radius: 2px; overflow: hidden;
+      width: 160px; height: 3px;
+      background: var(--border); border-radius: 2px; overflow: hidden;
     }
 
     .loading-bar-fill {
-      height: 100%;
-      background: var(--green);
-      border-radius: 2px;
-      animation: loadBar 1.5s ease forwards;
+      height: 100%; background: var(--green); border-radius: 2px;
+      animation: loadBar 1.4s ease forwards;
     }
 
     @keyframes loadBar { from { width: 0 } to { width: 100% } }
 
-    .error-notice {
-      background: var(--amber-dim);
-      border: 1px solid var(--amber);
-      color: var(--amber);
-      border-radius: var(--radius);
-      padding: 10px 16px;
-      font-family: var(--mono);
-      font-size: 12px;
-      display: none;
+    .loading-sub {
+      font-family: var(--mono); font-size: 10px;
+      color: var(--text-3); letter-spacing: 2px;
     }
-
-    .error-notice.show { display: block; }
   </style>
 </head>
 <body>
 
 <!-- Loading Screen -->
 <div class="loading-screen" id="loading-screen">
-  <div class="loading-logo">GREENWALL</div>
+  <div class="loading-logo">🌿 GREENWALL</div>
   <div class="loading-bar-wrap"><div class="loading-bar-fill"></div></div>
-  <div style="font-family:var(--mono);font-size:11px;color:var(--text-3);letter-spacing:2px;">INITIALIZING SENSORS</div>
+  <div class="loading-sub">INITIALIZING SENSORS</div>
 </div>
 
-<!-- App Shell -->
+<!-- Header -->
 <header>
   <div class="logo">
     <div class="logo-icon">🌿</div>
@@ -585,23 +562,19 @@
 </header>
 
 <main>
-  <!-- Error notice -->
   <div class="error-notice" id="error-notice">
-    ⚠ Cannot reach backend at <span id="api-url-display"></span> — check that Flask is running on the Pi.
+    ⚠ Cannot reach backend at <span id="api-url-display"></span> — showing demo data.
   </div>
 
-  <!-- Alerts -->
   <div id="alerts-bar"></div>
 
-  <!-- Sections Grid -->
-  <div class="sections-grid" id="sections-grid">
-    <!-- Rendered by JS -->
-  </div>
+  <!-- Sections in 2x2 grid -->
+  <div id="sections-grid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:14px;"></div>
 </main>
 
 <!-- Cell Detail Modal -->
 <div class="modal-overlay hidden" id="modal-overlay">
-  <div class="modal" id="modal">
+  <div class="modal">
     <div class="modal-header">
       <h3 id="modal-title">Cell Detail</h3>
       <button class="modal-close" id="modal-close">✕</button>
@@ -617,25 +590,18 @@
 </div>
 
 <script>
-// ─────────────────────────────────────────────
-// CONFIG — Update API_BASE to point at your Pi
-// ─────────────────────────────────────────────
-const API_BASE = "http://localhost:5000"; // e.g. "http://192.168.1.50:5000"
+// ─── CONFIG ───
+const API_BASE  = "http://localhost:5000"; // update to your Pi's IP
 const REFRESH_MS = 3000;
 
 document.getElementById("api-url-display").textContent = API_BASE + "/api/data";
 
-// ─────────────────────────────────────────────
-// STATE
-// ─────────────────────────────────────────────
 let allData = [];
-let useDemoData = false; // flips to true if API is unreachable
+let useDemoData = false;
 
-// ─────────────────────────────────────────────
-// SENSOR THRESHOLDS
-// ─────────────────────────────────────────────
+// ─── THRESHOLDS ───
 const TEMP_LOW = 18, TEMP_HIGH = 28;
-const MOIST_DRY = 700, MOIST_WET = 400; // raw analog: lower=wetter
+const MOIST_DRY = 700, MOIST_WET = 400;
 
 function moistureClass(raw) {
   if (raw > MOIST_DRY) return "dry";
@@ -643,14 +609,12 @@ function moistureClass(raw) {
   return "optimal";
 }
 
-// Normalize moisture: 0=dry, 100=wet (just for the progress bar)
 function moistPct(raw) {
-  const val = Math.max(0, Math.min(1023, raw));
-  return Math.round(((1023 - val) / 1023) * 100);
+  return Math.round(((1023 - Math.max(0, Math.min(1023, raw))) / 1023) * 100);
 }
 
 function moistColor(cls) {
-  return cls === "dry" ? "#ef4444" : cls === "wet" ? "#38bdf8" : "#22c55e";
+  return cls === "dry" ? "var(--red)" : cls === "wet" ? "var(--blue)" : "var(--green)";
 }
 
 function tempClass(t) {
@@ -659,91 +623,64 @@ function tempClass(t) {
   return "";
 }
 
-// ─────────────────────────────────────────────
-// DEMO DATA (used when Flask is not reachable)
-// ─────────────────────────────────────────────
+// ─── DEMO DATA ───
 function makeDemoData() {
   const r = (a, b) => +(Math.random() * (b - a) + a).toFixed(1);
   return [1,2,3,4].map(id => ({
-    board_id: id,
-    online: true,
+    board_id: id, online: true,
     last_updated: new Date().toISOString(),
-    light: r(30, 95),
-    aqi: r(10, 80),
+    light: r(30, 95), aqi: r(10, 80),
     pump: Math.random() < 0.2 ? 1 : 0,
     cells: [1,2,3,4,5,6].map(c => ({
-      cell: c,
-      temp: r(17, 32),
-      hum: r(40, 80),
+      cell: c, temp: r(17, 32), hum: r(40, 80),
       moist: Math.floor(Math.random() * 700 + 200),
     }))
   }));
 }
 
-// ─────────────────────────────────────────────
-// FETCH DATA
-// ─────────────────────────────────────────────
+// ─── FETCH ───
 async function fetchData() {
-  if (useDemoData) {
-    allData = makeDemoData();
-    renderAll();
-    return;
-  }
+  if (useDemoData) { allData = makeDemoData(); renderAll(); return; }
   try {
     const res = await fetch(`${API_BASE}/api/data`, { signal: AbortSignal.timeout(4000) });
-    if (!res.ok) throw new Error("bad response");
+    if (!res.ok) throw new Error();
     allData = await res.json();
     document.getElementById("error-notice").classList.remove("show");
     renderAll();
-  } catch (e) {
+  } catch {
     document.getElementById("error-notice").classList.add("show");
-    // Fall back to demo data so UI is still usable
-    useDemoData = true;
-    allData = makeDemoData();
-    renderAll();
+    useDemoData = true; allData = makeDemoData(); renderAll();
   }
 }
 
-// ─────────────────────────────────────────────
-// RENDER HELPERS
-// ─────────────────────────────────────────────
+// ─── RENDER ───
 function renderAll() {
-  renderSections();
-  renderAlerts();
-  updateTimestamp();
-}
-
-function updateTimestamp() {
+  renderSections(); renderAlerts();
   document.getElementById("timestamp").textContent = new Date().toLocaleTimeString();
 }
 
 function renderAlerts() {
   const bar = document.getElementById("alerts-bar");
   const alerts = [];
-  allData.forEach(section => {
-    section.cells?.forEach(cell => {
-      const mc = moistureClass(cell.moist);
-      if (mc === "dry")  alerts.push(`S${section.board_id}·C${cell.cell}: Soil dry`);
-      if (mc === "wet")  alerts.push(`S${section.board_id}·C${cell.cell}: Overwatered`);
-      if (tempClass(cell.temp) === "danger") alerts.push(`S${section.board_id}·C${cell.cell}: Temp ${cell.temp}°C`);
+  allData.forEach(s => {
+    s.cells?.forEach(c => {
+      const mc = moistureClass(c.moist);
+      if (mc === "dry") alerts.push(`S${s.board_id}·C${c.cell}: Soil dry`);
+      if (mc === "wet") alerts.push(`S${s.board_id}·C${c.cell}: Overwatered`);
+      if (tempClass(c.temp) === "danger") alerts.push(`S${s.board_id}·C${c.cell}: Temp ${c.temp}°C`);
     });
-    if (section.aqi > 60) alerts.push(`Section ${section.board_id}: High AQI ${section.aqi}`);
+    if (s.aqi > 60) alerts.push(`Section ${s.board_id}: High AQI ${s.aqi}`);
   });
   bar.innerHTML = alerts.map(a => `<div class="alert-chip">⚠ ${a}</div>`).join("");
 }
 
 function renderSections() {
-  const grid = document.getElementById("sections-grid");
-  grid.innerHTML = allData.map(s => renderSection(s)).join("");
+  document.getElementById("sections-grid").innerHTML = allData.map(renderSection).join("");
 }
 
 function renderSection(s) {
   const online = s.online !== false;
-  const pumpClass = s.pump ? "pump-on" : "pump-off";
-  const pumpLabel = s.pump ? "ON" : "OFF";
-
-  const cells = (s.cells || []).map(c => renderCell(c, s.board_id)).join("");
-
+  const aqiColor = s.aqi > 60 ? 'var(--red)' : s.aqi > 35 ? 'var(--amber)' : 'var(--green)';
   return `
     <div class="section-card ${online ? "" : "offline"}">
       <div class="section-header">
@@ -754,38 +691,34 @@ function renderSection(s) {
             <p>BOARD ID ${s.board_id} · 6 CELLS</p>
           </div>
         </div>
-        <span class="status-badge ${online ? "online" : "offline"}">${online ? "ONLINE" : "OFFLINE"}</span>
+        <span class="status-badge ${online ? "online" : "offline"}">${online ? "● ONLINE" : "○ OFFLINE"}</span>
       </div>
-
       <div class="section-metrics">
         <div class="metric">
-          <div class="metric-label">LIGHT</div>
+          <div class="metric-label">☀ LIGHT</div>
           <div class="metric-value">${s.light}<span class="metric-unit">%</span></div>
           <div class="metric-bar"><div class="metric-bar-fill" style="width:${s.light}%"></div></div>
         </div>
         <div class="metric">
-          <div class="metric-label">AQI PM2.5</div>
-          <div class="metric-value" style="color:${s.aqi > 60 ? 'var(--red)' : s.aqi > 35 ? 'var(--amber)' : 'var(--green)'}">${s.aqi}</div>
-          <div class="metric-bar"><div class="metric-bar-fill" style="width:${Math.min(s.aqi,100)}%;background:${s.aqi > 60 ? 'var(--red)' : s.aqi > 35 ? 'var(--amber)' : 'var(--green)'}"></div></div>
+          <div class="metric-label">💨 AQI PM2.5</div>
+          <div class="metric-value" style="color:${aqiColor}">${s.aqi}</div>
+          <div class="metric-bar"><div class="metric-bar-fill" style="width:${Math.min(s.aqi,100)}%;background:${aqiColor}"></div></div>
         </div>
         <div class="metric">
-          <div class="metric-label">PUMP</div>
-          <div class="metric-value ${pumpClass}">💧 ${pumpLabel}</div>
+          <div class="metric-label">💧 PUMP</div>
+          <div class="metric-value ${s.pump ? 'pump-on' : 'pump-off'}">${s.pump ? "ON" : "OFF"}</div>
         </div>
       </div>
-
       <div class="cells-grid">
-        ${cells}
+        ${(s.cells || []).map(c => renderCell(c, s.board_id)).join("")}
       </div>
-    </div>
-  `;
+    </div>`;
 }
 
 function renderCell(c, boardId) {
   const mc = moistureClass(c.moist);
   const tc = tempClass(c.temp);
   const mp = moistPct(c.moist);
-
   return `
     <div class="cell-card" onclick="openModal(${boardId}, ${c.cell})">
       <div class="cell-header">
@@ -794,79 +727,68 @@ function renderCell(c, boardId) {
       </div>
       <div class="cell-readings">
         <div class="reading-row">
-          <span class="reading-icon">🌡</span>
+          <span class="reading-label">🌡 TEMP</span>
           <span class="reading-val ${tc}">${c.temp}°C</span>
         </div>
         <div class="reading-row">
-          <span class="reading-icon">💧</span>
+          <span class="reading-label">💧 HUM</span>
           <span class="reading-val">${c.hum}%</span>
         </div>
-        <div class="moist-bar-wrap">
-          <span class="reading-icon">🪴</span>
-          <div class="moist-bar">
+        <div class="reading-row">
+          <span class="reading-label">🪴 SOIL</span>
+          <div class="moist-bar" style="flex:1;margin:0 6px">
             <div class="moist-bar-fill" style="width:${mp}%;background:${moistColor(mc)}"></div>
           </div>
-          <span class="reading-val" style="color:${moistColor(mc)};font-size:11px;min-width:32px;text-align:right">${mp}%</span>
+          <span class="reading-val" style="color:${moistColor(mc)}">${mp}%</span>
         </div>
       </div>
-    </div>
-  `;
+    </div>`;
 }
 
-// ─────────────────────────────────────────────
-// MODAL
-// ─────────────────────────────────────────────
+// ─── MODAL ───
 function openModal(boardId, cellNum) {
   const section = allData.find(s => s.board_id === boardId);
   if (!section) return;
   const cell = section.cells.find(c => c.cell === cellNum);
   if (!cell) return;
-
   const mc = moistureClass(cell.moist);
   const mp = moistPct(cell.moist);
   const tc = tempClass(cell.temp);
+  const tempColor = tc === 'danger' ? 'var(--red)' : tc === 'warn' ? 'var(--amber)' : 'var(--green)';
 
   document.getElementById("modal-title").textContent = `Section ${boardId} · Cell ${cellNum}`;
   document.getElementById("modal-stats").innerHTML = `
     <div class="modal-stat">
       <div class="s-label">Temperature</div>
-      <div class="s-val" style="color:${tc === 'danger' ? 'var(--red)' : tc === 'warn' ? 'var(--amber)' : 'var(--green-glow)'}">${cell.temp}<span class="s-unit">°C</span></div>
-      <div style="font-family:var(--mono);font-size:9px;color:var(--text-3);margin-top:6px">IDEAL: ${TEMP_LOW}–${TEMP_HIGH}°C</div>
+      <div class="s-val" style="color:${tempColor}">${cell.temp}<span class="s-unit">°C</span></div>
+      <div class="s-note">IDEAL: ${TEMP_LOW}–${TEMP_HIGH}°C</div>
     </div>
     <div class="modal-stat">
       <div class="s-label">Humidity</div>
       <div class="s-val" style="color:var(--blue)">${cell.hum}<span class="s-unit">%</span></div>
-      <div style="font-family:var(--mono);font-size:9px;color:var(--text-3);margin-top:6px">RELATIVE</div>
+      <div class="s-note">RELATIVE</div>
     </div>
     <div class="modal-stat">
       <div class="s-label">Soil Moisture</div>
       <div class="s-val" style="color:${moistColor(mc)}">${mp}<span class="s-unit">%</span></div>
-      <div style="font-family:var(--mono);font-size:9px;color:${moistColor(mc)};margin-top:6px;text-transform:uppercase">${mc}</div>
-    </div>
-  `;
-
+      <div class="s-note" style="color:${moistColor(mc)};text-transform:uppercase">${mc}</div>
+    </div>`;
   document.getElementById("modal-overlay").classList.remove("hidden");
 }
 
-document.getElementById("modal-close").addEventListener("click", () => {
-  document.getElementById("modal-overlay").classList.add("hidden");
-});
-
-document.getElementById("modal-overlay").addEventListener("click", (e) => {
-  if (e.target === document.getElementById("modal-overlay")) {
+document.getElementById("modal-close").addEventListener("click", () =>
+  document.getElementById("modal-overlay").classList.add("hidden"));
+document.getElementById("modal-overlay").addEventListener("click", e => {
+  if (e.target === document.getElementById("modal-overlay"))
     document.getElementById("modal-overlay").classList.add("hidden");
-  }
 });
 
-// ─────────────────────────────────────────────
-// STARTUP + POLLING
-// ─────────────────────────────────────────────
+// ─── STARTUP ───
 window.addEventListener("load", () => {
   setTimeout(() => {
     document.getElementById("loading-screen").classList.add("done");
-    setTimeout(() => document.getElementById("loading-screen").remove(), 600);
-  }, 1600);
-
+    setTimeout(() => document.getElementById("loading-screen").remove(), 500);
+  }, 1500);
   fetchData();
   setInterval(fetchData, REFRESH_MS);
 });
