@@ -1,163 +1,163 @@
 """
-Greenwall - Greenhouse Monitoring System
-Flask Backend API for Raspberry Pi
-Aggregates data from 4 Arduino Mega boards over USB serial
+Greenwall - Self-Monitoring Hydroponic Wall
+=========================================
+Unified Flask server for Raspberry Pi.
+
+- Reads JSON data from 4 Arduino Megas over USB serial (/dev/ttyACM0-3)
+- Stores latest data in memory
+- Serves the dashboard at http://<pi-ip>:5000/
+- Exposes API at http://<pi-ip>:5000/api/data
+- Accessible from any device on the same network
+
+Usage:
+    python app.py
+
+Install deps:
+    pip install flask flask-cors pyserial
 """
 
-from flask import Flask, jsonify
+from flask import Flask, jsonify, send_from_directory
 from flask_cors import CORS
-import json
+import serial
 import threading
+import json
 import time
-import random  # Remove when using real serial data
+import os
 from datetime import datetime
 
-# Uncomment for real serial communication:
-# import serial
-# import serial.tools.list_ports
-
 app = Flask(__name__)
-CORS(app)  # Allow cross-origin requests from the React frontend
+CORS(app)
 
-# ─────────────────────────────────────────────
-# In-memory store for all section data
-# Structure mirrors the JSON packets from Arduinos
-# ─────────────────────────────────────────────
+# ─────────────────────────────────────────────────────
+# SERIAL PORT CONFIG
+# Update these if your Pi assigns different ports.
+# Run `ls /dev/ttyACM*` to check.
+# ─────────────────────────────────────────────────────
+BOARD_PORTS = {
+    1: "/dev/ttyACM0",
+    2: "/dev/ttyACM1",
+    3: "/dev/ttyACM2",
+    4: "/dev/ttyACM3",
+}
+BAUD_RATE = 9600
+
+# ─────────────────────────────────────────────────────
+# IN-MEMORY DATA STORE
+# Keyed by board_id (1-4), matches the JSON packet format
+# the Arduinos send.
+# ─────────────────────────────────────────────────────
 greenhouse_data = {
-    1: {"board_id": 1, "cells": [], "light": 0, "aqi": 0, "pump": 0, "online": False, "last_updated": None},
-    2: {"board_id": 2, "cells": [], "light": 0, "aqi": 0, "pump": 0, "online": False, "last_updated": None},
-    3: {"board_id": 3, "cells": [], "light": 0, "aqi": 0, "pump": 0, "online": False, "last_updated": None},
-    4: {"board_id": 4, "cells": [], "light": 0, "aqi": 0, "pump": 0, "online": False, "last_updated": None},
+    board_id: {
+        "board_id": board_id,
+        "cells": [],
+        "light": 0,
+        "aqi": 0,
+        "pump": 0,
+        "online": False,
+        "last_updated": None,
+    }
+    for board_id in range(1, 5)
 }
 
 data_lock = threading.Lock()
 
-# ─────────────────────────────────────────────
-# Serial Reader Thread
-# Listens to all 4 Arduinos over USB
-# ─────────────────────────────────────────────
 
-# Map board_id → serial port (update these to match your Pi's /dev/ttyUSB* paths)
-SERIAL_PORTS = {
-    1: "/dev/ttyUSB0",
-    2: "/dev/ttyUSB1",
-    3: "/dev/ttyUSB2",
-    4: "/dev/ttyUSB3",
-}
-BAUD_RATE = 9600
-
-
-def read_serial_port(board_id, port_path):
-    """
-    Continuously reads JSON packets from a single Arduino over serial.
-    Runs in its own thread per board.
-    """
-    # Uncomment below for real hardware:
-    # while True:
-    #     try:
-    #         with serial.Serial(port_path, BAUD_RATE, timeout=2) as ser:
-    #             print(f"[Board {board_id}] Connected on {port_path}")
-    #             with data_lock:
-    #                 greenhouse_data[board_id]["online"] = True
-    #             while True:
-    #                 line = ser.readline().decode("utf-8").strip()
-    #                 if line:
-    #                     try:
-    #                         packet = json.loads(line)
-    #                         update_board_data(packet)
-    #                     except json.JSONDecodeError:
-    #                         pass  # Ignore malformed packets
-    #     except serial.SerialException as e:
-    #         print(f"[Board {board_id}] Serial error: {e}. Retrying in 5s...")
-    #         with data_lock:
-    #             greenhouse_data[board_id]["online"] = False
-    #         time.sleep(5)
-    pass
-
-
-def update_board_data(packet):
-    """Update in-memory store from a parsed Arduino JSON packet."""
-    board_id = packet.get("board_id")
-    if board_id not in greenhouse_data:
-        return
-    with data_lock:
-        greenhouse_data[board_id].update({
-            "cells": packet.get("cells", []),
-            "light": packet.get("light", 0),
-            "aqi": packet.get("aqi", 0),
-            "pump": packet.get("pump", 0),
-            "online": True,
-            "last_updated": datetime.now().isoformat(),
-        })
-
-
-# ─────────────────────────────────────────────
-# Demo Data Generator (remove for production)
-# Simulates realistic sensor readings
-# ─────────────────────────────────────────────
-
-def generate_demo_data():
-    """Produces realistic fake sensor data for UI development."""
+# ─────────────────────────────────────────────────────
+# SERIAL READER
+# One thread per Arduino. Reconnects automatically if
+# the cable is unplugged or the board resets.
+# ─────────────────────────────────────────────────────
+def read_serial(board_id, port):
+    """Continuously read JSON packets from one Arduino."""
     while True:
-        for board_id in range(1, 5):
-            cells = []
-            for cell_num in range(1, 7):
-                cells.append({
-                    "cell": cell_num,
-                    "temp": round(random.uniform(20, 30), 1),
-                    "hum": round(random.uniform(40, 80), 1),
-                    "moist": random.randint(300, 900),  # Raw analog: ~300=wet, ~900=dry
-                })
-            packet = {
-                "board_id": board_id,
-                "cells": cells,
-                "light": round(random.uniform(30, 95), 1),
-                "aqi": round(random.uniform(10, 80), 1),
-                "pump": random.choice([0, 0, 0, 1]),  # Mostly off
-            }
-            update_board_data(packet)
-        time.sleep(3)  # Refresh every 3 seconds
+        try:
+            with serial.Serial(port, BAUD_RATE, timeout=2) as ser:
+                print(f"[Board {board_id}] Connected on {port}")
+                time.sleep(2)  # Wait for Arduino to finish booting
+                with data_lock:
+                    greenhouse_data[board_id]["online"] = True
+
+                while True:
+                    line = ser.readline().decode("utf-8", errors="ignore").strip()
+                    if not line:
+                        continue
+                    try:
+                        packet = json.loads(line)
+                        with data_lock:
+                            greenhouse_data[board_id].update({
+                                "cells":        packet.get("cells", []),
+                                "light":        packet.get("light", 0),
+                                "aqi":          packet.get("aqi", 0),
+                                "pump":         packet.get("pump", 0),
+                                "online":       True,
+                                "last_updated": datetime.now().isoformat(),
+                            })
+                    except json.JSONDecodeError:
+                        print(f"[Board {board_id}] Bad JSON: {line}")
+
+        except serial.SerialException as e:
+            print(f"[Board {board_id}] Serial error on {port}: {e}. Retrying in 5s...")
+            with data_lock:
+                greenhouse_data[board_id]["online"] = False
+            time.sleep(5)
 
 
-# ─────────────────────────────────────────────
-# API Routes
-# ─────────────────────────────────────────────
+# ─────────────────────────────────────────────────────
+# API ROUTES
+# ─────────────────────────────────────────────────────
 
-@app.route("/api/data", methods=["GET"])
+@app.route("/api/data")
 def get_all_data():
-    """Returns the full current state of all 4 sections."""
+    """All 4 sections — polled by the dashboard every 3s."""
     with data_lock:
         return jsonify(list(greenhouse_data.values()))
 
 
-@app.route("/api/data/<int:board_id>", methods=["GET"])
-def get_section_data(board_id):
-    """Returns data for a single section by board_id (1–4)."""
+@app.route("/api/data/<int:board_id>")
+def get_section(board_id):
+    """Single section by board_id (1-4)."""
     if board_id not in greenhouse_data:
         return jsonify({"error": "Invalid board_id"}), 404
     with data_lock:
         return jsonify(greenhouse_data[board_id])
 
 
-@app.route("/api/health", methods=["GET"])
+@app.route("/api/health")
 def health():
-    """Simple health check endpoint."""
-    return jsonify({"status": "ok", "timestamp": datetime.now().isoformat()})
+    online = sum(1 for s in greenhouse_data.values() if s["online"])
+    return jsonify({
+        "status": "ok",
+        "boards_online": online,
+        "timestamp": datetime.now().isoformat(),
+    })
 
 
-# ─────────────────────────────────────────────
-# Startup
-# ─────────────────────────────────────────────
+# ─────────────────────────────────────────────────────
+# SERVE THE DASHBOARD
+# Flask serves index.html so any browser on the network
+# can open http://<pi-ip>:5000/ — no CORS issues.
+# index.html must be in the same folder as this file.
+# ─────────────────────────────────────────────────────
 
+@app.route("/")
+def dashboard():
+    return send_from_directory(os.path.dirname(__file__), "index.html")
+
+
+# ─────────────────────────────────────────────────────
+# STARTUP
+# ─────────────────────────────────────────────────────
 if __name__ == "__main__":
-    # Start demo data thread (replace with real serial threads for hardware)
-    demo_thread = threading.Thread(target=generate_demo_data, daemon=True)
-    demo_thread.start()
+    # Start one reader thread per Arduino board
+    for board_id, port in BOARD_PORTS.items():
+        t = threading.Thread(target=read_serial, args=(board_id, port), daemon=True)
+        t.start()
+        print(f"[Startup] Listening for Board {board_id} on {port}")
 
-    # For real hardware, start one thread per Arduino:
-    # for board_id, port in SERIAL_PORTS.items():
-    #     t = threading.Thread(target=read_serial_port, args=(board_id, port), daemon=True)
-    #     t.start()
+    print("\n✅ Greenwall server running!")
+    print("   Local:   http://localhost:5000")
+    print("   Network: http://<your-pi-ip>:5000")
+    print("   Find your IP with: hostname -I\n")
 
-    # Run Flask — accessible on the local network
-    app.run(host="0.0.0.0", port=5000, debug=False)
+    # host="0.0.0.0" makes it reachable on the whole LAN
+    app.run(host="0.0.0.0", port=5000, debug=False, threaded=True)
