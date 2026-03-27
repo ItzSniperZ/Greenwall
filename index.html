@@ -563,7 +563,7 @@
 
 <main>
   <div class="error-notice" id="error-notice">
-    ⚠ Cannot reach backend at <span id="api-url-display"></span> — showing demo data.
+    ⚠ Cannot reach the Flask backend — make sure app.py is running on the Pi. Showing demo data.
   </div>
 
   <div id="alerts-bar"></div>
@@ -591,10 +591,11 @@
 
 <script>
 // ─── CONFIG ───
-const API_BASE  = "http://localhost:5000"; // update to your Pi's IP
+// Empty string = same host that served this page (the Pi's Flask server).
+// This works automatically whether you're on the Pi itself or
+// accessing remotely from another device on the network.
+const API_BASE  = "";
 const REFRESH_MS = 3000;
-
-document.getElementById("api-url-display").textContent = API_BASE + "/api/data";
 
 let allData = [];
 let useDemoData = false;
