@@ -602,16 +602,18 @@ let useDemoData = false;
 
 // ─── THRESHOLDS ───
 const TEMP_LOW = 18, TEMP_HIGH = 28;
-const MOIST_DRY = 700, MOIST_WET = 400;
+const MOIST_DRY = 300, MOIST_WET = 700;
 
 function moistureClass(raw) {
-  if (raw > MOIST_DRY) return "dry";
-  if (raw < MOIST_WET) return "wet";
+  if (raw === -1) return "unplugged";
+  if (raw < MOIST_DRY) return "dry";
+  if (raw > MOIST_WET) return "wet";
   return "optimal";
 }
 
 function moistPct(raw) {
-  return Math.round(((1023 - Math.max(0, Math.min(1023, raw))) / 1023) * 100);
+  if (raw === -1) return null;
+  return Math.round((Math.max(0, Math.min(1023, raw)) / 1023) * 100);
 }
 
 function moistColor(cls) {
@@ -720,11 +722,23 @@ function renderCell(c, boardId) {
   const mc = moistureClass(c.moist);
   const tc = tempClass(c.temp);
   const mp = moistPct(c.moist);
+  const soilRow = mc === "unplugged" ? `
+        <div class="reading-row">
+          <span class="reading-label">🪴 SOIL</span>
+          <span class="reading-val" style="color:var(--text-3)">--</span>
+        </div>` : `
+        <div class="reading-row">
+          <span class="reading-label">🪴 SOIL</span>
+          <div class="moist-bar" style="flex:1;margin:0 6px">
+            <div class="moist-bar-fill" style="width:${mp}%;background:${moistColor(mc)}"></div>
+          </div>
+          <span class="reading-val" style="color:${moistColor(mc)}">${mp}%</span>
+        </div>`;
   return `
     <div class="cell-card" onclick="openModal(${boardId}, ${c.cell})">
       <div class="cell-header">
         <span class="cell-num">CELL ${c.cell}</span>
-        <div class="moist-dot ${mc}"></div>
+        <div class="moist-dot ${mc === "unplugged" ? "optimal" : mc}" style="${mc === "unplugged" ? "opacity:0.2" : ""}"></div>
       </div>
       <div class="cell-readings">
         <div class="reading-row">
@@ -735,13 +749,7 @@ function renderCell(c, boardId) {
           <span class="reading-label">💧 HUM</span>
           <span class="reading-val">${c.hum}%</span>
         </div>
-        <div class="reading-row">
-          <span class="reading-label">🪴 SOIL</span>
-          <div class="moist-bar" style="flex:1;margin:0 6px">
-            <div class="moist-bar-fill" style="width:${mp}%;background:${moistColor(mc)}"></div>
-          </div>
-          <span class="reading-val" style="color:${moistColor(mc)}">${mp}%</span>
-        </div>
+        ${soilRow}
       </div>
     </div>`;
 }
