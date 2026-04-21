@@ -4,19 +4,20 @@
 const int BOARD_ID = 2;
 const int CELL_START = 6;
 
-const int DHTPins[6] = {20, 21, 22, 23, 24, 25};
-const int moisturePins[6] = {14, 15, 16, 17, 18, 19};
-const int relayPins[6] = {26, 27, 28, 29, 30, 31};
-const int redPins[6] = {2, 5, 8, 11, 44, 47};
-const int greenPins[6] = {3, 6, 9, 12, 45, 48};
-const int bluePins[6] = {4, 7, 10, 13, 46, 49};
+const int DHTPins[6]      = {22, 24, 26, 28, 30, 32};
+const int moisturePins[6] = {A8, A9, A10, A11, A12, A13};
+const int relayPins[6]    = {23, 25, 27, 29, 31, 33};
+const int solenoidPins[6] = {14, 15, 16, 17, 18, 19};
+const int redPins[6]      = {2,  5,  8,  11, 44, 47};
+const int greenPins[6]    = {3,  6,  9,  12, 45, 48};
+const int bluePins[6]     = {4,  7,  10, 13, 46, 49};
 
-const int waterPumpPin = 50;
+const int waterPumpPin  = 50;
 const int pumpButtonPin = 52;
-const int photocellPin = A3;
+const int photocellPin  = A3;
 
-const int DRY_THRESHOLD = 850;
-const int WET_THRESHOLD = 350;
+const int DRY_THRESHOLD = 100;  // below this = dry
+const int WET_THRESHOLD = 700;  // above this = wet
 
 Adafruit_PM25AQI aqi = Adafruit_PM25AQI();
 dht DHTs[6];
@@ -29,6 +30,9 @@ bool pumpToggleState = false;
 int lastButtonReading = HIGH;
 int stableButtonState = HIGH;
 unsigned long lastDebounce = 0;
+unsigned long lastDHTRead = 0;
+unsigned long lastSend = 0;
+int dhtIndex = 0;
 
 void setLEDColor(int i, int r, int g, int b) {
   digitalWrite(redPins[i], r);
@@ -40,7 +44,6 @@ void sendPacket(int light, uint16_t aqiVal) {
   Serial.print("{\"board_id\":");
   Serial.print(BOARD_ID);
   Serial.print(",\"cells\":[");
-
   for (int i = 0; i < 6; i++) {
     Serial.print("{\"cell\":");
     Serial.print(CELL_START + i + 1);
@@ -53,7 +56,6 @@ void sendPacket(int light, uint16_t aqiVal) {
     Serial.print("}");
     if (i < 5) Serial.print(",");
   }
-
   Serial.print("],\"light\":");
   Serial.print(light);
   Serial.print(",\"aqi\":");
@@ -65,38 +67,54 @@ void sendPacket(int light, uint16_t aqiVal) {
 
 void setup() {
   Serial.begin(9600);
-
   for (int i = 0; i < 6; i++) {
     pinMode(redPins[i], OUTPUT);
     pinMode(greenPins[i], OUTPUT);
     pinMode(bluePins[i], OUTPUT);
     pinMode(relayPins[i], OUTPUT);
+    pinMode(solenoidPins[i], OUTPUT);
   }
-
   pinMode(waterPumpPin, OUTPUT);
   pinMode(pumpButtonPin, INPUT_PULLUP);
-
   aqi.begin_I2C();
 }
 
 void loop() {
-  for (int i = 0; i < 6; i++) {
-    DHTs[i].read11(DHTPins[i]);
-    temperatures[i] = DHTs[i].temperature;
-    humidities[i] = DHTs[i].humidity;
-    moistureValues[i] = analogRead(moisturePins[i]);
+  unsigned long now = millis();
 
-    if (moistureValues[i] > DRY_THRESHOLD) setLEDColor(i, HIGH, LOW, LOW);
-    else if (moistureValues[i] < WET_THRESHOLD) setLEDColor(i, LOW, LOW, HIGH);
-    else setLEDColor(i, LOW, HIGH, LOW);
+  if (now - lastDHTRead >= 1000) {
+    lastDHTRead = now;
+    int result = DHTs[dhtIndex].read11(DHTPins[dhtIndex]);
+    if (result == DHTLIB_OK) {
+      temperatures[dhtIndex] = DHTs[dhtIndex].temperature;
+      humidities[dhtIndex] = DHTs[dhtIndex].humidity;
+    } else {
+      temperatures[dhtIndex] = 0;
+      humidities[dhtIndex] = 0;
+    }
+    dhtIndex = (dhtIndex + 1) % 6;
   }
 
-  int light = map(analogRead(photocellPin), 0, 1000, 0, 100);
+  for (int i = 0; i < 6; i++) {
+    moistureValues[i] = analogRead(moisturePins[i]);
+    if (moistureValues[i] > 1000) {
+      moistureValues[i] = -1;         // unplugged
+      setLEDColor(i, LOW, LOW, LOW);  // off
+    } else if (moistureValues[i] < DRY_THRESHOLD) {
+      setLEDColor(i, HIGH, LOW, LOW); // red = dry
+    } else if (moistureValues[i] > WET_THRESHOLD) {
+      setLEDColor(i, LOW, LOW, HIGH); // blue = wet
+    } else {
+      setLEDColor(i, LOW, HIGH, LOW); // green = ok
+    }
+  }
 
-  uint16_t aqiVal = 0;
-  PM25_AQI_Data data;
-  if (aqi.read(&data)) aqiVal = data.aqi_pm25_us;
-
-  sendPacket(light, aqiVal);
-  delay(2500);
+  if (now - lastSend >= 3000) {
+    lastSend = now;
+    int light = map(analogRead(photocellPin), 0, 1000, 0, 100);
+    uint16_t aqiVal = 0;
+    PM25_AQI_Data data;
+    if (aqi.read(&data)) aqiVal = data.aqi_pm25_us;
+    sendPacket(light, aqiVal);
+  }
 }
