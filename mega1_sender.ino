@@ -16,8 +16,8 @@ const int waterPumpPin  = 50;
 const int pumpButtonPin = 52;
 const int photocellPin  = A3;
 
-const int DRY_THRESHOLD = 850;
-const int WET_THRESHOLD = 350;
+const int DRY_THRESHOLD = 100;  // below this = dry
+const int WET_THRESHOLD = 700;  // above this = wet
 
 Adafruit_PM25AQI aqi = Adafruit_PM25AQI();
 dht DHTs[6];
@@ -97,9 +97,16 @@ void loop() {
 
   for (int i = 0; i < 6; i++) {
     moistureValues[i] = analogRead(moisturePins[i]);
-    if (moistureValues[i] > DRY_THRESHOLD) setLEDColor(i, HIGH, LOW, LOW);
-    else if (moistureValues[i] < WET_THRESHOLD) setLEDColor(i, LOW, LOW, HIGH);
-    else setLEDColor(i, LOW, HIGH, LOW);
+    if (moistureValues[i] > 1000) {
+      moistureValues[i] = -1;         // unplugged
+      setLEDColor(i, LOW, LOW, LOW);  // off
+    } else if (moistureValues[i] < DRY_THRESHOLD) {
+      setLEDColor(i, HIGH, LOW, LOW); // red = dry
+    } else if (moistureValues[i] > WET_THRESHOLD) {
+      setLEDColor(i, LOW, LOW, HIGH); // blue = wet
+    } else {
+      setLEDColor(i, LOW, HIGH, LOW); // green = ok
+    }
   }
 
   if (now - lastSend >= 3000) {
