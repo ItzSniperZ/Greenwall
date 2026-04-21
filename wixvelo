@@ -1,0 +1,33 @@
+import { ok, serverError } from 'wix-http-functions';
+import wixData from 'wix-data';
+
+export async function post_sensorData(request) {
+  try {
+    const body = await request.body.json();
+    const items = [];
+
+    // body is an array of sections from your /api/data endpoint
+    for (const section of body) {
+      for (const cell of section.cells || []) {
+        if (cell.moist === -1) continue; // skip unplugged sensors
+        items.push({
+          timestamp:     new Date(),
+          sectionNumber: section.board_id,
+          cellNumber:    cell.cell,
+          temperature:   cell.temp,
+          humidity:      cell.hum,
+          moisture:      cell.moist,
+        });
+      }
+    }
+
+    // Insert all readings in parallel
+    await Promise.all(items.map(item =>
+      wixData.insert('SensorReadings', item)
+    ));
+
+    return ok({ json: { success: true, count: items.length } });
+  } catch (e) {
+    return serverError({ json: { error: e.message } });
+  }
+}
