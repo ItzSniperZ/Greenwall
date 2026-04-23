@@ -1,0 +1,4 @@
+[Desktop Entry]
+Type=Application
+Name=Greenwall Kiosk
+Exec=bash -c 'sleep 5 && wlr-randr --output HDMI-A-2 --transform 90 && sleep 10 && chromium --kiosk --noerrdialogs --disable-infobars --password-store=basic --no-first-run --disable-sync http://localhost:5000'
