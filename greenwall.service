@@ -1,0 +1,13 @@
+[Unit]
+Description=Greenwall Flask Server
+After=network.target
+
+[Service]
+User=thinktank
+WorkingDirectory=/home/thinktank/greenwall
+ExecStart=/usr/bin/python3 /home/thinktank/greenwall/app.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
