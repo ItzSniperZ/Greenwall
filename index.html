@@ -7,9 +7,6 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
   <style>
-    /* ═══════════════════════════════════════════
-       DESIGN SYSTEM — LIGHT / WHITE, VERTICAL
-       ═══════════════════════════════════════════ */
     :root {
       --bg:          #f4f7f4;
       --bg-2:        #edf2ed;
@@ -17,24 +14,18 @@
       --panel-2:     #f8fbf8;
       --border:      #dde8dd;
       --border-2:    #ccdacc;
-
       --green:       #1a7a3a;
       --green-light: #e6f5ec;
       --green-mid:   #2ea65a;
-
       --red:         #c0392b;
       --red-light:   #fdecea;
-
       --amber:       #b45309;
       --amber-light: #fef3e2;
-
       --blue:        #1565c0;
       --blue-light:  #e8f0fe;
-
       --text:        #111a11;
       --text-2:      #3a4f3a;
       --text-3:      #6b856b;
-
       --mono:        'Space Mono', monospace;
       --sans:        'Syne', sans-serif;
       --radius:      8px;
@@ -53,7 +44,6 @@
       overflow-x: hidden;
     }
 
-    /* ─── HEADER ─── */
     header {
       position: sticky; top: 0; z-index: 100;
       background: var(--panel);
@@ -64,9 +54,7 @@
       box-shadow: 0 2px 8px rgba(0,0,0,0.06);
     }
 
-    .logo {
-      display: flex; align-items: center; gap: 14px;
-    }
+    .logo { display: flex; align-items: center; gap: 14px; }
 
     .logo-icon {
       width: 40px; height: 40px;
@@ -95,9 +83,7 @@
       margin-top: -2px;
     }
 
-    .header-right {
-      display: flex; align-items: center; gap: 18px;
-    }
+    .header-right { display: flex; align-items: center; gap: 18px; }
 
     .live-badge {
       display: flex; align-items: center; gap: 6px;
@@ -123,23 +109,15 @@
       50%       { opacity: 0.6; box-shadow: 0 0 0 4px rgba(26,122,58,0); }
     }
 
-    .timestamp {
-      font-family: var(--mono);
-      font-size: 14px;
-      color: var(--text-3);
-    }
+    .timestamp { font-family: var(--mono); font-size: 14px; color: var(--text-3); }
 
-    /* ─── MAIN — full width, vertical monitor ─── */
     main {
       position: relative; z-index: 1;
       padding: 20px;
       display: flex; flex-direction: column; gap: 18px;
     }
 
-    /* ─── ALERTS BAR ─── */
-    #alerts-bar {
-      display: flex; gap: 8px; flex-wrap: wrap;
-    }
+    #alerts-bar { display: flex; gap: 8px; flex-wrap: wrap; }
 
     .alert-chip {
       display: flex; align-items: center; gap: 6px;
@@ -159,7 +137,6 @@
       50%       { border-color: #e8a09a; }
     }
 
-    /* ─── SECTION CARD ─── */
     .section-card {
       background: var(--panel);
       border: 1.5px solid var(--border-2);
@@ -169,11 +146,7 @@
       transition: box-shadow 0.2s, border-color 0.2s;
     }
 
-    .section-card:hover {
-      box-shadow: var(--shadow-hover);
-      border-color: var(--green-mid);
-    }
-
+    .section-card:hover { box-shadow: var(--shadow-hover); border-color: var(--green-mid); }
     .section-card.offline { opacity: 0.45; }
 
     .section-header {
@@ -183,9 +156,7 @@
       background: var(--panel-2);
     }
 
-    .section-title {
-      display: flex; align-items: center; gap: 14px;
-    }
+    .section-title { display: flex; align-items: center; gap: 14px; }
 
     .section-num {
       width: 44px; height: 44px;
@@ -198,352 +169,107 @@
       color: #fff;
     }
 
-    .section-label h2 {
-      font-size: 18px;
-      font-weight: 700;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      color: var(--text);
-    }
+    .section-label h2 { font-size: 18px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--text); }
+    .section-label p { font-family: var(--mono); font-size: 11px; color: var(--text-3); margin-top: 2px; }
 
-    .section-label p {
-      font-family: var(--mono);
-      font-size: 11px;
-      color: var(--text-3);
-      margin-top: 2px;
-    }
+    .status-badge { font-family: var(--mono); font-size: 11px; padding: 5px 12px; border-radius: 20px; letter-spacing: 1px; font-weight: 700; }
+    .status-badge.online { background: var(--green-light); color: var(--green); border: 1px solid var(--green-mid); }
+    .status-badge.offline { background: #f0f0f0; color: #999; border: 1px solid #ddd; }
 
-    .status-badge {
-      font-family: var(--mono);
-      font-size: 11px;
-      padding: 5px 12px;
-      border-radius: 20px;
-      letter-spacing: 1px;
-      font-weight: 700;
-    }
+    .section-metrics { display: flex; border-bottom: 1.5px solid var(--border); }
 
-    .status-badge.online {
-      background: var(--green-light);
-      color: var(--green);
-      border: 1px solid var(--green-mid);
-    }
-
-    .status-badge.offline {
-      background: #f0f0f0;
-      color: #999;
-      border: 1px solid #ddd;
-    }
-
-    /* ─── SECTION METRICS ROW ─── */
-    .section-metrics {
-      display: flex;
-      border-bottom: 1.5px solid var(--border);
-    }
-
-    .metric {
-      flex: 1;
-      padding: 14px 20px;
-      border-right: 1px solid var(--border);
-      display: flex; flex-direction: column; gap: 5px;
-    }
-
+    .metric { flex: 1; padding: 14px 20px; border-right: 1px solid var(--border); display: flex; flex-direction: column; gap: 5px; }
     .metric:last-child { border-right: none; }
 
-    .metric-label {
-      font-family: var(--mono);
-      font-size: 10px;
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-      color: var(--text-3);
-    }
-
-    .metric-value {
-      font-family: var(--mono);
-      font-size: 24px;
-      font-weight: 700;
-      color: var(--text);
-      line-height: 1;
-    }
-
-    .metric-unit {
-      font-size: 13px;
-      color: var(--text-3);
-      font-weight: 400;
-    }
-
-    .metric-bar {
-      height: 5px;
-      background: var(--border);
-      border-radius: 3px;
-      margin-top: 4px;
-      overflow: hidden;
-    }
-
-    .metric-bar-fill {
-      height: 100%;
-      border-radius: 3px;
-      background: var(--green);
-      transition: width 0.6s ease;
-    }
+    .metric-label { font-family: var(--mono); font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-3); }
+    .metric-value { font-family: var(--mono); font-size: 24px; font-weight: 700; color: var(--text); line-height: 1; }
+    .metric-unit { font-size: 13px; color: var(--text-3); font-weight: 400; }
+    .metric-bar { height: 5px; background: var(--border); border-radius: 3px; margin-top: 4px; overflow: hidden; }
+    .metric-bar-fill { height: 100%; border-radius: 3px; background: var(--green); transition: width 0.6s ease; }
 
     .pump-on  { color: var(--blue) !important; }
     .pump-off { color: var(--text-3) !important; }
 
-    /* ─── CELLS GRID — 3 columns ─── */
-    .cells-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 0;
-      background: var(--border);
-    }
+    .cells-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; background: var(--border); }
 
-    /* ─── CELL CARD ─── */
     .cell-card {
-      background: var(--panel);
-      padding: 16px 18px;
-      cursor: pointer;
-      transition: background 0.15s;
-      position: relative;
-      border-top: 1px solid var(--border);
+      background: var(--panel); padding: 16px 18px;
+      cursor: pointer; transition: background 0.15s;
+      position: relative; border-top: 1px solid var(--border);
     }
 
-    .cell-card::after {
-      content: '';
-      position: absolute;
-      bottom: 0; left: 0; right: 0;
-      height: 3px;
-      background: transparent;
-      transition: background 0.2s;
-    }
-
+    .cell-card::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 3px; background: transparent; transition: background 0.2s; }
     .cell-card:hover { background: var(--panel-2); }
     .cell-card:hover::after { background: var(--green); }
 
-    .cell-header {
-      display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 12px;
-    }
+    .cell-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .cell-num { font-family: var(--mono); font-size: 11px; letter-spacing: 1px; color: var(--text-3); text-transform: uppercase; font-weight: 700; }
 
-    .cell-num {
-      font-family: var(--mono);
-      font-size: 11px;
-      letter-spacing: 1px;
-      color: var(--text-3);
-      text-transform: uppercase;
-      font-weight: 700;
-    }
-
-    .moist-dot {
-      width: 12px; height: 12px;
-      border-radius: 50%;
-      flex-shrink: 0;
-    }
-
+    .moist-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
     .moist-dot.dry     { background: var(--red);   box-shadow: 0 0 0 3px var(--red-light); }
     .moist-dot.optimal { background: var(--green);  box-shadow: 0 0 0 3px var(--green-light); }
     .moist-dot.wet     { background: var(--blue);   box-shadow: 0 0 0 3px var(--blue-light); }
 
-    .cell-readings {
-      display: flex; flex-direction: column; gap: 0;
-    }
+    .cell-readings { display: flex; flex-direction: column; gap: 0; }
 
-    .reading-row {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 7px 0;
-      border-bottom: 1px solid var(--border);
-    }
-
+    .reading-row { display: flex; align-items: center; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid var(--border); }
     .reading-row:last-child { border-bottom: none; }
 
-    .reading-label {
-      font-family: var(--mono);
-      font-size: 11px;
-      color: var(--text-3);
-      letter-spacing: 0.5px;
-      display: flex; align-items: center; gap: 5px;
-    }
-
-    .reading-val {
-      font-family: var(--mono);
-      font-size: 16px;
-      font-weight: 700;
-      color: var(--text);
-    }
-
+    .reading-label { font-family: var(--mono); font-size: 11px; color: var(--text-3); letter-spacing: 0.5px; display: flex; align-items: center; gap: 5px; }
+    .reading-val { font-family: var(--mono); font-size: 16px; font-weight: 700; color: var(--text); }
     .reading-val.warn   { color: var(--amber); }
     .reading-val.danger { color: var(--red); }
 
-    .moist-bar {
-      height: 8px;
-      background: var(--border);
-      border-radius: 4px;
-      overflow: hidden;
-    }
+    .moist-bar { height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
+    .moist-bar-fill { height: 100%; border-radius: 4px; transition: width 0.6s ease, background 0.3s; }
 
-    .moist-bar-fill {
-      height: 100%; border-radius: 4px;
-      transition: width 0.6s ease, background 0.3s;
-    }
-
-    /* ─── ERROR NOTICE ─── */
-    .error-notice {
-      background: var(--amber-light);
-      border: 1.5px solid var(--amber);
-      color: var(--amber);
-      border-radius: var(--radius);
-      padding: 9px 14px;
-      font-family: var(--mono);
-      font-size: 11px;
-      display: none;
-    }
-
+    .error-notice { background: var(--amber-light); border: 1.5px solid var(--amber); color: var(--amber); border-radius: var(--radius); padding: 9px 14px; font-family: var(--mono); font-size: 11px; display: none; }
     .error-notice.show { display: block; }
 
-    /* ─── MODAL ─── */
-    .modal-overlay {
-      position: fixed; inset: 0; z-index: 200;
-      background: rgba(0,0,0,0.35);
-      backdrop-filter: blur(6px);
-      display: flex; align-items: center; justify-content: center;
-      padding: 20px;
-      animation: fadeIn 0.2s ease;
-    }
-
+    .modal-overlay { position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,0.35); backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; padding: 20px; animation: fadeIn 0.2s ease; }
     .modal-overlay.hidden { display: none; }
 
     @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
 
-    .modal {
-      background: var(--panel);
-      border: 1.5px solid var(--border-2);
-      border-radius: var(--radius-lg);
-      width: 100%; max-width: 480px;
-      overflow: hidden;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.18);
-      animation: slideUp 0.22s ease;
-    }
+    .modal { background: var(--panel); border: 1.5px solid var(--border-2); border-radius: var(--radius-lg); width: 100%; max-width: 480px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.18); animation: slideUp 0.22s ease; }
 
-    @keyframes slideUp {
-      from { transform: translateY(16px); opacity: 0 }
-      to   { transform: translateY(0); opacity: 1 }
-    }
+    @keyframes slideUp { from { transform: translateY(16px); opacity: 0 } to { transform: translateY(0); opacity: 1 } }
 
-    .modal-header {
-      padding: 18px 22px;
-      background: var(--panel-2);
-      border-bottom: 1.5px solid var(--border);
-      display: flex; align-items: center; justify-content: space-between;
-    }
+    .modal-header { padding: 18px 22px; background: var(--panel-2); border-bottom: 1.5px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+    .modal-header h3 { font-size: 14px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--text); }
 
-    .modal-header h3 {
-      font-size: 14px; font-weight: 700;
-      letter-spacing: 1px; text-transform: uppercase;
-      color: var(--text);
-    }
+    .modal-close { background: none; border: 1.5px solid var(--border-2); color: var(--text-3); cursor: pointer; width: 28px; height: 28px; border-radius: var(--radius); font-size: 14px; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+    .modal-close:hover { border-color: var(--red); color: var(--red); background: var(--red-light); }
 
-    .modal-close {
-      background: none; border: 1.5px solid var(--border-2);
-      color: var(--text-3); cursor: pointer;
-      width: 28px; height: 28px;
-      border-radius: var(--radius); font-size: 14px;
-      display: flex; align-items: center; justify-content: center;
-      transition: all 0.15s;
-    }
+    .modal-body { padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+    .modal-stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
 
-    .modal-close:hover {
-      border-color: var(--red); color: var(--red);
-      background: var(--red-light);
-    }
-
-    .modal-body {
-      padding: 20px;
-      display: flex; flex-direction: column; gap: 16px;
-    }
-
-    .modal-stat-grid {
-      display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
-    }
-
-    .modal-stat {
-      background: var(--bg);
-      border: 1.5px solid var(--border);
-      border-radius: var(--radius);
-      padding: 14px 12px; text-align: center;
-    }
-
-    .modal-stat .s-label {
-      font-family: var(--mono); font-size: 8px;
-      letter-spacing: 2px; text-transform: uppercase;
-      color: var(--text-3); margin-bottom: 8px;
-    }
-
-    .modal-stat .s-val {
-      font-family: var(--mono); font-size: 24px;
-      font-weight: 700; line-height: 1;
-    }
-
+    .modal-stat { background: var(--bg); border: 1.5px solid var(--border); border-radius: var(--radius); padding: 14px 12px; text-align: center; }
+    .modal-stat .s-label { font-family: var(--mono); font-size: 8px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-3); margin-bottom: 8px; }
+    .modal-stat .s-val { font-family: var(--mono); font-size: 24px; font-weight: 700; line-height: 1; }
     .modal-stat .s-unit { font-size: 12px; color: var(--text-3); }
+    .modal-stat .s-note { font-family: var(--mono); font-size: 8px; color: var(--text-3); margin-top: 6px; }
 
-    .modal-stat .s-note {
-      font-family: var(--mono); font-size: 8px;
-      color: var(--text-3); margin-top: 6px;
-    }
-
-    .chart-placeholder {
-      background: var(--bg);
-      border: 1.5px dashed var(--border-2);
-      border-radius: var(--radius); height: 100px;
-      display: flex; align-items: center; justify-content: center;
-      flex-direction: column; gap: 5px;
-      color: var(--text-3); font-family: var(--mono); font-size: 10px;
-    }
-
+    .chart-placeholder { background: var(--bg); border: 1.5px dashed var(--border-2); border-radius: var(--radius); height: 100px; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 5px; color: var(--text-3); font-family: var(--mono); font-size: 10px; }
     .chart-placeholder span { font-size: 20px; opacity: 0.5; }
 
-    /* ─── LOADING ─── */
-    .loading-screen {
-      position: fixed; inset: 0; z-index: 300;
-      background: var(--panel);
-      display: flex; align-items: center; justify-content: center;
-      flex-direction: column; gap: 14px;
-      transition: opacity 0.4s;
-    }
-
+    .loading-screen { position: fixed; inset: 0; z-index: 300; background: var(--panel); display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 14px; transition: opacity 0.4s; }
     .loading-screen.done { opacity: 0; pointer-events: none; }
-
-    .loading-logo {
-      font-family: var(--sans); font-size: 28px;
-      font-weight: 800; letter-spacing: 4px; color: var(--green);
-    }
-
-    .loading-bar-wrap {
-      width: 160px; height: 3px;
-      background: var(--border); border-radius: 2px; overflow: hidden;
-    }
-
-    .loading-bar-fill {
-      height: 100%; background: var(--green); border-radius: 2px;
-      animation: loadBar 1.4s ease forwards;
-    }
-
+    .loading-logo { font-family: var(--sans); font-size: 28px; font-weight: 800; letter-spacing: 4px; color: var(--green); }
+    .loading-bar-wrap { width: 160px; height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }
+    .loading-bar-fill { height: 100%; background: var(--green); border-radius: 2px; animation: loadBar 1.4s ease forwards; }
     @keyframes loadBar { from { width: 0 } to { width: 100% } }
-
-    .loading-sub {
-      font-family: var(--mono); font-size: 10px;
-      color: var(--text-3); letter-spacing: 2px;
-    }
+    .loading-sub { font-family: var(--mono); font-size: 10px; color: var(--text-3); letter-spacing: 2px; }
   </style>
 </head>
 <body>
 
-<!-- Loading Screen -->
 <div class="loading-screen" id="loading-screen">
   <div class="loading-logo">🌿 GREENWALL</div>
   <div class="loading-bar-wrap"><div class="loading-bar-fill"></div></div>
   <div class="loading-sub">INITIALIZING SENSORS</div>
 </div>
 
-<!-- Header -->
 <header>
   <div class="logo">
     <div class="logo-icon">🌿</div>
@@ -553,10 +279,7 @@
     </div>
   </div>
   <div class="header-right">
-    <div class="live-badge">
-      <div class="live-dot"></div>
-      LIVE
-    </div>
+    <div class="live-badge"><div class="live-dot"></div>LIVE</div>
     <div class="timestamp" id="timestamp">--:--:--</div>
   </div>
 </header>
@@ -565,14 +288,10 @@
   <div class="error-notice" id="error-notice">
     ⚠ Cannot reach the Flask backend — make sure app.py is running on the Pi. Showing demo data.
   </div>
-
   <div id="alerts-bar"></div>
-
-  <!-- Sections in 2x2 grid -->
   <div id="sections-grid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:14px;"></div>
 </main>
 
-<!-- Cell Detail Modal -->
 <div class="modal-overlay hidden" id="modal-overlay">
   <div class="modal">
     <div class="modal-header">
@@ -590,18 +309,13 @@
 </div>
 
 <script>
-// ─── CONFIG ───
-// Empty string = same host that served this page (the Pi's Flask server).
-// This works automatically whether you're on the Pi itself or
-// accessing remotely from another device on the network.
-const API_BASE  = "";
+const API_BASE   = "";
 const REFRESH_MS = 3000;
 
-let allData = [];
+let allData     = [];
 let useDemoData = false;
 
-// ─── THRESHOLDS ───
-const TEMP_LOW = 18, TEMP_HIGH = 28;
+const TEMP_LOW  = 18, TEMP_HIGH  = 28;
 const MOIST_DRY = 300, MOIST_WET = 700;
 
 function moistureClass(raw) {
@@ -626,13 +340,13 @@ function tempClass(t) {
   return "";
 }
 
-// ─── DEMO DATA ───
 function makeDemoData() {
   const r = (a, b) => +(Math.random() * (b - a) + a).toFixed(1);
   return [1,2,3,4].map(id => ({
     board_id: id, online: true,
     last_updated: new Date().toISOString(),
-    light: r(30, 95), aqi: r(10, 80),
+    light: Math.floor(Math.random() * 100),
+    aqi: r(10, 80),
     pump: Math.random() < 0.2 ? 1 : 0,
     cells: [1,2,3,4,5,6].map(c => ({
       cell: c, temp: r(17, 32), hum: r(40, 80),
@@ -641,7 +355,6 @@ function makeDemoData() {
   }));
 }
 
-// ─── FETCH ───
 async function fetchData() {
   if (useDemoData) { allData = makeDemoData(); renderAll(); return; }
   try {
@@ -656,7 +369,6 @@ async function fetchData() {
   }
 }
 
-// ─── RENDER ───
 function renderAll() {
   renderSections(); renderAlerts();
   document.getElementById("timestamp").textContent = new Date().toLocaleTimeString();
@@ -682,7 +394,7 @@ function renderSections() {
 }
 
 function renderSection(s) {
-  const online = s.online !== false;
+  const online   = s.online !== false;
   const aqiColor = s.aqi > 60 ? 'var(--red)' : s.aqi > 35 ? 'var(--amber)' : 'var(--green)';
   return `
     <div class="section-card ${online ? "" : "offline"}">
@@ -754,7 +466,6 @@ function renderCell(c, boardId) {
     </div>`;
 }
 
-// ─── MODAL ───
 function openModal(boardId, cellNum) {
   const section = allData.find(s => s.board_id === boardId);
   if (!section) return;
@@ -779,7 +490,7 @@ function openModal(boardId, cellNum) {
     </div>
     <div class="modal-stat">
       <div class="s-label">Soil Moisture</div>
-      <div class="s-val" style="color:${moistColor(mc)}">${mp}<span class="s-unit">%</span></div>
+      <div class="s-val" style="color:${moistColor(mc)}">${mp !== null ? mp + '%' : '--'}</div>
       <div class="s-note" style="color:${moistColor(mc)};text-transform:uppercase">${mc}</div>
     </div>`;
   document.getElementById("modal-overlay").classList.remove("hidden");
@@ -792,7 +503,6 @@ document.getElementById("modal-overlay").addEventListener("click", e => {
     document.getElementById("modal-overlay").classList.add("hidden");
 });
 
-// ─── STARTUP ───
 window.addEventListener("load", () => {
   setTimeout(() => {
     document.getElementById("loading-screen").classList.add("done");
