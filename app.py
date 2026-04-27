@@ -26,7 +26,8 @@ SOLENOID_DELAY     = 10
 OPEN_DURATION      = 300
 NIGHTLY_HOUR       = 21
 DRY_CHECK_DELAY    = 5
-STARTUP_DELAY      = 120  # seconds after boot before dry checks begin
+STARTUP_DELAY      = 120
+CELL_COOLDOWN      = 3600  # 1 hour cooldown per cell after watering
 
 START_TIME = time.time()
 
@@ -50,6 +51,7 @@ pump_serial    = None
 dry_queue      = deque()
 dry_queue_lock = threading.Lock()
 already_queued = set()
+last_watered   = {}  # cell_index -> timestamp of last watering
 
 
 def send_command(cmd):
@@ -86,6 +88,10 @@ def run_nightly_cycle():
             time.sleep(SOLENOID_DELAY)
         send_command("PUMP_OFF")
         print("[Pump] Nightly cycle complete")
+        # Mark all cells as watered after nightly cycle
+        with dry_queue_lock:
+            for i in range(6):
+                last_watered[i] = time.time()
     except Exception as e:
         print(f"[Pump] Error during nightly cycle: {e}")
         send_command("ALL_SOL_OFF")
@@ -110,6 +116,9 @@ def run_dry_cell_cycle(cell_index):
         send_command(f"SOL_OFF_{sol_num}")
         send_command("PUMP_OFF")
         print(f"[Pump] Dry cycle complete for cell {sol_num}")
+        # Record watering time for this cell
+        with dry_queue_lock:
+            last_watered[cell_index] = time.time()
     except Exception as e:
         print(f"[Pump] Error during dry cycle: {e}")
         send_command(f"SOL_OFF_{sol_num}")
@@ -139,6 +148,12 @@ def dry_queue_worker():
 
 def queue_dry_cell(cell_index):
     with dry_queue_lock:
+        # Check cooldown
+        last = last_watered.get(cell_index, 0)
+        if time.time() - last < CELL_COOLDOWN:
+            remaining = int((CELL_COOLDOWN - (time.time() - last)) / 60)
+            print(f"[Pump] Cell {cell_index + 1} in cooldown, {remaining}min remaining")
+            return
         if cell_index not in already_queued:
             already_queued.add(cell_index)
             dry_queue.append(cell_index)
@@ -188,14 +203,11 @@ def read_serial(board_id, port):
                                 "online":       True,
                                 "last_updated": datetime.now().isoformat(),
                             })
-
-                        # Only check for dry cells after startup delay
                         if time.time() - START_TIME > STARTUP_DELAY:
                             for cell in packet.get("cells", []):
                                 moist = cell.get("moist", -1)
                                 if moist > 10 and moist < DRY_THRESHOLD:
                                     queue_dry_cell(cell["cell"] - 1)
-
                     except json.JSONDecodeError:
                         print(f"[Board {board_id}] Bad JSON: {line}")
         except serial.SerialException as e:
@@ -227,13 +239,19 @@ def health():
     with pump_lock:
         running = pump_running
     uptime = int(time.time() - START_TIME)
+    with dry_queue_lock:
+        cooldowns = {
+            str(i + 1): max(0, int((CELL_COOLDOWN - (time.time() - t)) / 60))
+            for i, t in last_watered.items()
+        }
     return jsonify({
-        "status":        "ok",
-        "boards_online": online,
-        "pump_running":  running,
-        "uptime_seconds": uptime,
+        "status":               "ok",
+        "boards_online":        online,
+        "pump_running":         running,
+        "uptime_seconds":       uptime,
         "startup_delay_active": uptime < STARTUP_DELAY,
-        "timestamp":     datetime.now().isoformat(),
+        "cell_cooldowns_min":   cooldowns,
+        "timestamp":            datetime.now().isoformat(),
     })
 
 
