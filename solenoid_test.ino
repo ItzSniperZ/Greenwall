@@ -1,24 +1,62 @@
-// solenoid_test.ino
-// Greenwall Water System Test
-// Closes solenoids on pins 14-19 and holds them closed.
-
+// solenoid_test_board1.ino
 const int SOLENOID_PINS[] = {14, 15, 16, 17, 18, 19};
 const int NUM_SOLENOIDS = 6;
+const int PUMP_PIN = 50;
 
 void setup() {
   Serial.begin(9600);
 
+  pinMode(PUMP_PIN, OUTPUT);
+  digitalWrite(PUMP_PIN, LOW);
+
   for (int i = 0; i < NUM_SOLENOIDS; i++) {
     pinMode(SOLENOID_PINS[i], OUTPUT);
-    digitalWrite(SOLENOID_PINS[i], LOW); // Close solenoid (energize)
+  }
+
+  // Step 1 — Close solenoids one by one with 5 second delay
+  Serial.println("Closing solenoids...");
+  for (int i = 0; i < NUM_SOLENOIDS; i++) {
+    digitalWrite(SOLENOID_PINS[i], LOW);
     Serial.print("Solenoid on pin ");
     Serial.print(SOLENOID_PINS[i]);
     Serial.println(" → CLOSED");
+    delay(5000);
   }
+  Serial.println("All solenoids closed.");
 
-  Serial.println("All solenoids closed. Water system ready.");
+  // Step 2 — Run pump for 90 seconds
+  Serial.println("Pump ON...");
+  digitalWrite(PUMP_PIN, HIGH);
+  delay(90000);
+  digitalWrite(PUMP_PIN, LOW);
+  Serial.println("Pump OFF.");
+
+  // Step 3 — Open solenoids one by one with 5 second delay
+  Serial.println("Opening solenoids...");
+  for (int i = 0; i < NUM_SOLENOIDS; i++) {
+    digitalWrite(SOLENOID_PINS[i], HIGH);
+    Serial.print("Solenoid on pin ");
+    Serial.print(SOLENOID_PINS[i]);
+    Serial.println(" → OPEN");
+    delay(5000);
+  }
+  Serial.println("All solenoids open. Holding for 5 minutes...");
+
+  // Step 4 — Hold open for 5 minutes
+  delay(300000);
+
+  // Step 5 — Close solenoids one by one with 5 second delay
+  Serial.println("Closing solenoids...");
+  for (int i = 0; i < NUM_SOLENOIDS; i++) {
+    digitalWrite(SOLENOID_PINS[i], LOW);
+    Serial.print("Solenoid on pin ");
+    Serial.print(SOLENOID_PINS[i]);
+    Serial.println(" → CLOSED");
+    delay(5000);
+  }
+  Serial.println("All solenoids closed. Test complete.");
 }
 
 void loop() {
-  // Nothing — solenoids stay closed indefinitely
+  // Nothing — test runs once in setup
 }
