@@ -1,4 +1,4 @@
-#include <dht.h>
+#include <DHT.h>
 #include "Adafruit_PM25AQI.h"
 
 const int BOARD_ID = 1;
@@ -15,18 +15,24 @@ const int bluePins[6]     = {4,  7,  10, 13, 46, 49};
 const int waterPumpPin = 50;
 const int photocellPin = A3;
 
-const int DRY_THRESHOLD   = 300;
-const int WET_THRESHOLD   = 700;
-const int LIGHT_MIN       = 980;
-const int LIGHT_MAX       = 1023;
+const int DRY_THRESHOLD  = 300;
+const int WET_THRESHOLD  = 700;
+const int LIGHT_MIN      = 980;
+const int LIGHT_MAX      = 1023;
+const int FAN_ON_TEMP    = 28;
+const int FAN_OFF_TEMP   = 25;
+
+DHT DHTs[6] = {
+  DHT(22, DHT11), DHT(24, DHT11), DHT(26, DHT11),
+  DHT(28, DHT11), DHT(30, DHT11), DHT(32, DHT11)
+};
 
 Adafruit_PM25AQI aqi = Adafruit_PM25AQI();
-dht DHTs[6];
 
-int temperatures[6];
-int humidities[6];
+float temperatures[6];
+float humidities[6];
 int moistureValues[6];
-
+bool fanState[6] = {false, false, false, false, false, false};
 bool pumpState = false;
 
 unsigned long lastDHTRead = 0;
@@ -39,25 +45,36 @@ void setLEDColor(int i, int r, int g, int b) {
   digitalWrite(bluePins[i],  b);
 }
 
+void updateFans() {
+  for (int i = 0; i < 6; i++) {
+    if (temperatures[i] > 10 && temperatures[i] < 50) {
+      if (!fanState[i] && temperatures[i] > FAN_ON_TEMP) {
+        fanState[i] = true;
+        digitalWrite(relayPins[i], HIGH);
+      } else if (fanState[i] && temperatures[i] < FAN_OFF_TEMP) {
+        fanState[i] = false;
+        digitalWrite(relayPins[i], LOW);
+      }
+    }
+    delay(50);
+  }
+}
+
 void handleCommand(String cmd) {
   cmd.trim();
 
   if (cmd == "PUMP_ON") {
     digitalWrite(waterPumpPin, HIGH);
     pumpState = true;
-
   } else if (cmd == "PUMP_OFF") {
     digitalWrite(waterPumpPin, LOW);
     pumpState = false;
-
   } else if (cmd.startsWith("SOL_ON_")) {
     int idx = cmd.substring(7).toInt() - 1;
     if (idx >= 0 && idx < 6) digitalWrite(solenoidPins[idx], HIGH);
-
   } else if (cmd.startsWith("SOL_OFF_")) {
     int idx = cmd.substring(8).toInt() - 1;
     if (idx >= 0 && idx < 6) digitalWrite(solenoidPins[idx], LOW);
-
   } else if (cmd == "ALL_SOL_OFF") {
     for (int i = 0; i < 6; i++) digitalWrite(solenoidPins[i], LOW);
   }
@@ -92,12 +109,15 @@ void setup() {
   Serial.begin(9600);
 
   for (int i = 0; i < 6; i++) {
+    digitalWrite(relayPins[i],    LOW);
+    digitalWrite(solenoidPins[i], LOW);
     pinMode(redPins[i],      OUTPUT);
     pinMode(greenPins[i],    OUTPUT);
     pinMode(bluePins[i],     OUTPUT);
     pinMode(relayPins[i],    OUTPUT);
     pinMode(solenoidPins[i], OUTPUT);
-    digitalWrite(solenoidPins[i], LOW);
+    DHTs[i].begin();
+    delay(50);
   }
 
   pinMode(waterPumpPin, OUTPUT);
@@ -116,15 +136,17 @@ void loop() {
 
   if (now - lastDHTRead >= 1000) {
     lastDHTRead = now;
-    int result = DHTs[dhtIndex].read11(DHTPins[dhtIndex]);
-    if (result == DHTLIB_OK) {
-      temperatures[dhtIndex] = DHTs[dhtIndex].temperature;
-      humidities[dhtIndex]   = DHTs[dhtIndex].humidity;
+    float t = DHTs[dhtIndex].readTemperature();
+    float h = DHTs[dhtIndex].readHumidity();
+    if (!isnan(t) && !isnan(h)) {
+      temperatures[dhtIndex] = t;
+      humidities[dhtIndex]   = h;
     } else {
       temperatures[dhtIndex] = 0;
       humidities[dhtIndex]   = 0;
     }
     dhtIndex = (dhtIndex + 1) % 6;
+    updateFans();
   }
 
   for (int i = 0; i < 6; i++) {
@@ -135,7 +157,7 @@ void loop() {
     } else if (moistureValues[i] < DRY_THRESHOLD) {
       setLEDColor(i, HIGH, LOW, LOW);
     } else if (moistureValues[i] > WET_THRESHOLD) {
-      setLEDColor(i, LOW, LOW, HIGH);
+      setLEDColor(i, LOW, LOW, LOW);
     } else {
       setLEDColor(i, LOW, HIGH, LOW);
     }
