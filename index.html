@@ -275,7 +275,7 @@
     <div class="logo-icon">🌿</div>
     <div>
       <h1>Greenwall</h1>
-      <span>GREENHOUSE MONITORING SYSTEM</span>
+      <span>SELF-WATERING HYDROPONIC SYSTEM</span>
     </div>
   </div>
   <div class="header-right">
@@ -320,14 +320,15 @@ const MOIST_DRY = 300, MOIST_WET = 700;
 
 function moistureClass(raw) {
   if (raw === -1) return "unplugged";
-  if (raw < MOIST_DRY) return "dry";
-  if (raw > MOIST_WET) return "wet";
+  const pct = Math.min(100, Math.round((Math.max(0, Math.min(859, raw)) / 859) * 100));
+  if (pct < 25) return "dry";
+  if (pct > 85) return "wet";
   return "optimal";
 }
 
 function moistPct(raw) {
   if (raw === -1) return null;
-  return Math.round((Math.max(0, Math.min(1023, raw)) / 1023) * 100);
+  return Math.min(100, Math.round((Math.max(0, Math.min(859, raw)) / 859) * 100));
 }
 
 function moistColor(cls) {
@@ -358,15 +359,20 @@ function makeDemoData() {
 async function fetchData() {
   if (useDemoData) { allData = makeDemoData(); renderAll(); return; }
   try {
-    const res = await fetch(`${API_BASE}/api/data`, { signal: AbortSignal.timeout(4000) });
+    const res = await fetch(`${API_BASE}/api/data`, { signal: AbortSignal.timeout(8000) });
     if (!res.ok) throw new Error();
     allData = await res.json();
     document.getElementById("error-notice").classList.remove("show");
     renderAll();
   } catch {
     document.getElementById("error-notice").classList.add("show");
-    useDemoData = true; allData = makeDemoData(); renderAll();
+    allData = makeDemoData(); renderAll();
   }
+}
+
+function getAqi() {
+  const s1 = allData.find(s => s.board_id === 1);
+  return s1 ? s1.aqi : 0;
 }
 
 function renderAll() {
@@ -384,7 +390,7 @@ function renderAlerts() {
       if (mc === "wet") alerts.push(`S${s.board_id}·C${c.cell}: Overwatered`);
       if (tempClass(c.temp) === "danger") alerts.push(`S${s.board_id}·C${c.cell}: Temp ${c.temp}°C`);
     });
-    if (s.aqi > 60) alerts.push(`Section ${s.board_id}: High AQI ${s.aqi}`);
+    if (s.aqi > 60) alerts.push(`Section ${s.board_id}: High AQI ${aqi}`);
   });
   bar.innerHTML = alerts.map(a => `<div class="alert-chip">⚠ ${a}</div>`).join("");
 }
@@ -395,7 +401,8 @@ function renderSections() {
 
 function renderSection(s) {
   const online   = s.online !== false;
-  const aqiColor = s.aqi > 60 ? 'var(--red)' : s.aqi > 35 ? 'var(--amber)' : 'var(--green)';
+  const aqi = getAqi();
+  const aqiColor = aqi > 60 ? 'var(--red)' : aqi > 35 ? 'var(--amber)' : 'var(--green)';
   return `
     <div class="section-card ${online ? "" : "offline"}">
       <div class="section-header">
@@ -409,15 +416,11 @@ function renderSection(s) {
         <span class="status-badge ${online ? "online" : "offline"}">${online ? "● ONLINE" : "○ OFFLINE"}</span>
       </div>
       <div class="section-metrics">
-        <div class="metric">
-          <div class="metric-label">☀ LIGHT</div>
-          <div class="metric-value">${s.light}<span class="metric-unit">%</span></div>
-          <div class="metric-bar"><div class="metric-bar-fill" style="width:${s.light}%"></div></div>
-        </div>
+
         <div class="metric">
           <div class="metric-label">💨 AQI PM2.5</div>
-          <div class="metric-value" style="color:${aqiColor}">${s.aqi}</div>
-          <div class="metric-bar"><div class="metric-bar-fill" style="width:${Math.min(s.aqi,100)}%;background:${aqiColor}"></div></div>
+          <div class="metric-value" style="color:${aqiColor}">${aqi}</div>
+          <div class="metric-bar"><div class="metric-bar-fill" style="width:${Math.min(aqi,100)}%;background:${aqiColor}"></div></div>
         </div>
         <div class="metric">
           <div class="metric-label">💧 PUMP</div>
