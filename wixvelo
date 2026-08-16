@@ -6,10 +6,9 @@ export async function post_sensorData(request) {
     const body = await request.body.json();
     const items = [];
 
-    // body is an array of sections from your /api/data endpoint
     for (const section of body) {
       for (const cell of section.cells || []) {
-        if (cell.moist === -1) continue; // skip unplugged sensors
+        if (cell.moist === -1) continue;
         items.push({
           timestamp:     new Date(),
           sectionNumber: section.board_id,
@@ -21,13 +20,29 @@ export async function post_sensorData(request) {
       }
     }
 
-    // Insert all readings in parallel
     await Promise.all(items.map(item =>
       wixData.insert('SensorReadings', item)
     ));
 
-    return ok({ json: { success: true, count: items.length } });
+    return ok({ headers: { "Content-Type": "application/json" }, body: { success: true, count: items.length } });
   } catch (e) {
-    return serverError({ json: { error: e.message } });
+    return serverError({ headers: { "Content-Type": "application/json" }, body: { error: e.message } });
+  }
+}
+
+export async function post_wateringLog(request) {
+  try {
+    const body = await request.body.json();
+
+    await wixData.insert('WateringLog', {
+      timestamp: new Date(body.timestamp),
+      boardId:   body.board_id,
+      cell:      body.cell,
+      reason:    body.reason,
+    });
+
+    return ok({ headers: { "Content-Type": "application/json" }, body: { success: true } });
+  } catch (e) {
+    return serverError({ headers: { "Content-Type": "application/json" }, body: { error: e.message } });
   }
 }
