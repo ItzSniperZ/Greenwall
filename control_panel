@@ -83,6 +83,8 @@
       margin-top: -2px;
     }
 
+    .header-right { display: flex; align-items: center; gap: 12px; }
+
     main { padding: 20px; display: flex; flex-direction: column; gap: 18px; }
 
     .global-card {
@@ -125,8 +127,8 @@
     .btn:hover          { border-color: var(--green-mid); color: var(--green); background: var(--green-light); }
     .btn.btn-red        { border-color: var(--red);   color: var(--red); }
     .btn.btn-red:hover  { background: var(--red-light); }
-    .btn.btn-green      { border-color: var(--green); color: var(--green); }
-    .btn.btn-green:hover{ background: var(--green-light); }
+    .btn.btn-green      { border-color: var(--green); color: var(--green); background: var(--green-light); }
+    .btn.btn-green:hover{ background: var(--green-light); opacity: 0.8; }
     .btn.btn-blue       { border-color: var(--blue);  color: var(--blue); }
     .btn.btn-blue:hover { background: var(--blue-light); }
     .btn.btn-amber      { border-color: var(--amber); color: var(--amber); }
@@ -310,7 +312,6 @@
       background: var(--panel);
     }
 
-    /* Hex polygon styles — white mode */
     .hex-poly          { fill: var(--border); transition: fill 0.3s; cursor: pointer; }
     .hex-poly.led-R    { fill: var(--red-light);   stroke: var(--red);   stroke-width: 1.5; }
     .hex-poly.led-G    { fill: var(--green-light); stroke: var(--green); stroke-width: 1.5; }
@@ -375,6 +376,10 @@
       <span>CONTROL PANEL</span>
     </div>
   </div>
+  <div class="header-right">
+    <button id="mode-btn" class="btn btn-amber" onclick="toggleMode()">○ MANUAL</button>
+    <a href="/" style="font-family:var(--mono);font-size:10px;color:var(--text-3);text-decoration:none;letter-spacing:1px">← DASHBOARD</a>
+  </div>
 </header>
 
 <main>
@@ -403,6 +408,7 @@
 <script>
 const API = "http://10.19.238.15:5000";
 const SECTIONS = [1, 2, 3, 4];
+let currentMode = 'manual';
 
 const state = {};
 SECTIONS.forEach(s => {
@@ -427,6 +433,26 @@ async function api(path, method='POST') {
     const res = await fetch(`${API}${path}`, { method });
     return await res.json();
   } catch(e) { toast('⚠ API error'); }
+}
+
+async function toggleMode() {
+  const newMode = currentMode === 'auto' ? 'manual' : 'auto';
+  await api(`/api/mode/${newMode}`);
+  currentMode = newMode;
+  updateModeButton();
+  toast(`Mode → ${newMode.toUpperCase()}`);
+}
+
+function updateModeButton() {
+  const btn = document.getElementById('mode-btn');
+  if (!btn) return;
+  if (currentMode === 'auto') {
+    btn.textContent = '● AUTO';
+    btn.className = 'btn btn-green';
+  } else {
+    btn.textContent = '○ MANUAL';
+    btn.className = 'btn btn-amber';
+  }
 }
 
 async function setFanCell(boardId, cellIdx, on) {
@@ -522,7 +548,6 @@ function ledClass(color) {
   return '';
 }
 
-// ── Hex SVG — same math as working dark version ──
 const R = 20;
 const HW = Math.sqrt(3) * R;
 const HS = HW + 4;
@@ -665,10 +690,21 @@ function buildSections() {
 
 buildSections();
 
+// Poll status and mode
 async function pollStatus() {
   try {
-    const res = await fetch(`${API}/api/data`);
-    const data = await res.json();
+    const [dataRes, modeRes] = await Promise.all([
+      fetch(`${API}/api/data`),
+      fetch(`${API}/api/mode`)
+    ]);
+    const data = await dataRes.json();
+    const modeData = await modeRes.json();
+
+    if (modeData.mode !== currentMode) {
+      currentMode = modeData.mode;
+      updateModeButton();
+    }
+
     data.forEach(section => {
       const badge = document.querySelector(`#section-${section.board_id} .status-badge`);
       if (badge) {
