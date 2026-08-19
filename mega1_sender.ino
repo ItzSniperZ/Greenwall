@@ -12,8 +12,10 @@ const int redPins[6]      = {2,  5,  8,  11, 44, 47};
 const int greenPins[6]    = {3,  6,  9,  12, 45, 48};
 const int bluePins[6]     = {4,  7,  10, 13, 46, 49};
 
-const int waterPumpPin = 50;
-const int photocellPin = A3;
+const int waterPumpPin  = 50;
+const int photocellPin  = A3;
+const int wallFanLeft   = 35;
+const int wallFanRight  = 37;
 
 const int DRY_THRESHOLD  = 215;
 const int WET_THRESHOLD  = 730;
@@ -37,6 +39,7 @@ bool pumpState = false;
 bool breatheActive = false;
 bool manualFanOverride = false;
 bool manualLedOverride = false;
+bool wallFanState = false;
 
 unsigned long lastDHTRead  = 0;
 unsigned long lastSend     = 0;
@@ -49,6 +52,12 @@ void setLEDColor(int i, int r, int g, int b) {
   digitalWrite(redPins[i],   r);
   digitalWrite(greenPins[i], g);
   digitalWrite(bluePins[i],  b);
+}
+
+void setWallFans(bool on) {
+  wallFanState = on;
+  digitalWrite(wallFanLeft,  on ? HIGH : LOW);
+  digitalWrite(wallFanRight, on ? HIGH : LOW);
 }
 
 void updateFans() {
@@ -98,6 +107,10 @@ void handleCommand(String cmd) {
     digitalWrite(waterPumpPin, HIGH); pumpState = true;
   } else if (cmd == "PUMP_OFF") {
     digitalWrite(waterPumpPin, LOW);  pumpState = false;
+  } else if (cmd == "WALL_FAN_ON") {
+    setWallFans(true);
+  } else if (cmd == "WALL_FAN_OFF") {
+    setWallFans(false);
   } else if (cmd.startsWith("SOL_ON_")) {
     int idx = cmd.substring(7).toInt() - 1;
     if (idx >= 0 && idx < 6) digitalWrite(solenoidPins[idx], HIGH);
@@ -173,6 +186,7 @@ void sendPacket(int light, uint16_t aqiVal) {
   Serial.print("],\"light\":"); Serial.print(light);
   Serial.print(",\"aqi\":"); Serial.print(aqiVal);
   Serial.print(",\"pump\":"); Serial.print(pumpState ? 1 : 0);
+  Serial.print(",\"wall_fan\":"); Serial.print(wallFanState ? 1 : 0);
   Serial.println("}");
 }
 
@@ -191,6 +205,10 @@ void setup() {
   }
   pinMode(waterPumpPin, OUTPUT);
   digitalWrite(waterPumpPin, LOW);
+  pinMode(wallFanLeft,  OUTPUT);
+  pinMode(wallFanRight, OUTPUT);
+  digitalWrite(wallFanLeft,  LOW);
+  digitalWrite(wallFanRight, LOW);
   aqi.begin_I2C();
   manualFanOverride = false;
   manualLedOverride = false;
