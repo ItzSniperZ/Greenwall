@@ -26,19 +26,23 @@ SECTION_SOLENOIDS = {
     4: [1, 3, 4, 5, 6],
 }
 
-DRY_THRESHOLD         = 215
-PRESSURIZE_DELAY      = 120
-SOLENOID_DELAY        = 10
-OPEN_DURATION         = 300
-NIGHTLY_HOUR          = 21
-DRY_CHECK_DELAY       = 5
-STARTUP_DELAY         = 120
-CELL_COOLDOWN         = 3600
-DRY_CONFIRM_READINGS  = 3    # consecutive dry readings before queuing
-STATE_FILE            = os.path.join(os.path.dirname(__file__), "greenwall_state.json")
+DRY_THRESHOLD          = 215
+PRESSURIZE_DELAY       = 120
+SOLENOID_DELAY         = 10
+OPEN_DURATION          = 300
+NIGHTLY_HOUR           = 21
+DRY_CHECK_DELAY        = 5
+STARTUP_DELAY          = 120
+CELL_COOLDOWN          = 3600
+DRY_CONFIRM_READINGS   = 3
+WALL_FAN_HOT_THRESHOLD = 6
+WALL_FAN_TEMP          = 28
+STATE_FILE             = os.path.join(os.path.dirname(__file__), "greenwall_state.json")
 
 START_TIME = time.time()
 system_mode = "auto"
+wall_fan_state = False
+wall_fan_lock = threading.Lock()
 
 greenhouse_data = {
     board_id: {
@@ -60,16 +64,14 @@ dry_queue      = deque()
 dry_queue_lock = threading.Lock()
 already_queued = set()
 last_watered   = {}
-dry_counts     = defaultdict(int)  # tracks consecutive dry readings per cell
+dry_counts     = defaultdict(int)
 
 board_serials  = {1: None, 2: None, 3: None, 4: None}
 serial_lock    = threading.Lock()
 
-watering_log   = []  # in-memory log of all watering events
+watering_log   = []
 log_lock       = threading.Lock()
 
-
-# ─── STATE PERSISTENCE ───
 
 def load_state():
     global last_watered
@@ -103,8 +105,6 @@ def log_watering(board_id, cell_index, reason):
     print(f"[Log] Watering: {entry}")
 
 
-# ─── SERIAL ───
-
 def send_command(board_id, cmd):
     with serial_lock:
         ser = board_serials.get(board_id)
@@ -135,8 +135,6 @@ def close_solenoids(board_id, solenoids):
         send_command(board_id, f"SOL_OFF_{sol}")
         time.sleep(SOLENOID_DELAY)
 
-
-# ─── PUMP CYCLES ───
 
 def run_nightly_cycle():
     global pump_running
@@ -174,7 +172,6 @@ def run_nightly_cycle():
 def run_dry_cell_cycle(board_id, cell_index):
     global pump_running
     sol_num = cell_index + 1
-    print(f"[Pump] Dry trigger — Board {board_id} cell {sol_num}")
     with pump_lock:
         pump_running = True
     try:
@@ -220,29 +217,21 @@ def queue_dry_cell(board_id, cell_index):
     if system_mode != "auto":
         return
     global_index = (board_id - 1) * 6 + cell_index
-
-    # Increment consecutive dry count
     dry_counts[global_index] += 1
-
-    # Only queue after N consecutive dry readings
     if dry_counts[global_index] < DRY_CONFIRM_READINGS:
         return
-
     with dry_queue_lock:
         last = last_watered.get(global_index, 0)
         if time.time() - last < CELL_COOLDOWN:
-            remaining = int((CELL_COOLDOWN - (time.time() - last)) / 60)
-            print(f"[Pump] Board {board_id} cell {cell_index+1} in cooldown, {remaining}min remaining")
             return
         if global_index not in already_queued:
             already_queued.add(global_index)
             dry_queue.append((board_id, cell_index))
-            dry_counts[global_index] = 0  # reset count after queuing
+            dry_counts[global_index] = 0
             print(f"[Pump] Queued dry cell board {board_id} cell {cell_index+1}")
 
 
 def reset_dry_count(board_id, cell_index):
-    """Call when a cell reads non-dry to reset its consecutive count."""
     global_index = (board_id - 1) * 6 + cell_index
     if dry_counts[global_index] > 0:
         dry_counts[global_index] = 0
@@ -258,7 +247,7 @@ def nightly_scheduler():
         print(f"[Pump] Next nightly cycle in {wait/3600:.1f} hours")
         time.sleep(wait)
         if system_mode != "auto":
-            print("[Pump] Skipped — MANUAL mode")
+            print("[Pump] Skipped -- MANUAL mode")
             continue
         with pump_lock:
             running = pump_running
@@ -266,7 +255,31 @@ def nightly_scheduler():
             threading.Thread(target=run_nightly_cycle, daemon=True).start()
 
 
-# ─── SERIAL READER ───
+def check_wall_fans():
+    global wall_fan_state
+    while True:
+        time.sleep(10)
+        if system_mode != "auto":
+            continue
+        try:
+            hot_cells = 0
+            with data_lock:
+                for section in greenhouse_data.values():
+                    for cell in section.get("cells", []):
+                        if cell.get("temp", 0) > WALL_FAN_TEMP:
+                            hot_cells += 1
+            with wall_fan_lock:
+                if not wall_fan_state and hot_cells > WALL_FAN_HOT_THRESHOLD:
+                    wall_fan_state = True
+                    send_command(1, "WALL_FAN_ON")
+                    print(f"[WallFan] ON -- {hot_cells} hot cells")
+                elif wall_fan_state and hot_cells <= WALL_FAN_HOT_THRESHOLD:
+                    wall_fan_state = False
+                    send_command(1, "WALL_FAN_OFF")
+                    print(f"[WallFan] OFF -- {hot_cells} hot cells")
+        except Exception as e:
+            print(f"[WallFan] Error: {e}")
+
 
 def read_serial(board_id, port):
     while True:
@@ -297,7 +310,7 @@ def read_serial(board_id, port):
                             for cell in packet.get("cells", []):
                                 moist = cell.get("moist", -1)
                                 cell_index = (cell["cell"] - 1) % 6
-                                if moist > 10 and moist < DRY_THRESHOLD:
+                                if moist != -1 and moist < DRY_THRESHOLD:
                                     queue_dry_cell(board_id, cell_index)
                                 else:
                                     reset_dry_count(board_id, cell_index)
@@ -331,6 +344,8 @@ def health():
     online = sum(1 for s in greenhouse_data.values() if s["online"])
     with pump_lock:
         running = pump_running
+    with wall_fan_lock:
+        wf = wall_fan_state
     with dry_queue_lock:
         cooldowns = {
             str(i+1): max(0, int((CELL_COOLDOWN - (time.time() - t)) / 60))
@@ -339,6 +354,7 @@ def health():
     return jsonify({
         "status": "ok", "mode": system_mode,
         "boards_online": online, "pump_running": running,
+        "wall_fan": wf,
         "uptime_seconds": int(time.time() - START_TIME),
         "cell_cooldowns_min": cooldowns,
         "timestamp": datetime.now().isoformat(),
@@ -356,18 +372,16 @@ def set_auto():
     global system_mode
     system_mode = "auto"
     send_all("AUTO_MODE")
-    print("[Mode] AUTO")
     return jsonify({"success": True, "mode": "auto"})
 
 @app.route("/api/mode/manual", methods=["POST"])
 def set_manual():
     global system_mode
-    system_mode = "auto"
+    system_mode = "manual"
     send_command(1, "PUMP_OFF")
     for board_id in [1, 2, 3, 4]:
         send_command(board_id, "ALL_SOL_OFF")
         send_command(board_id, "MANUAL_MODE")
-    print("[Mode] MANUAL")
     return jsonify({"success": True, "mode": "manual"})
 
 @app.route("/api/mode")
@@ -384,6 +398,29 @@ def manual_pump_trigger():
         return jsonify({"error": "Pump already running"}), 409
     threading.Thread(target=run_nightly_cycle, daemon=True).start()
     return jsonify({"success": True, "message": "Cycle started"})
+
+# ─── WALL FANS ───
+
+@app.route("/api/wallfan/on", methods=["POST"])
+def wall_fan_on():
+    global wall_fan_state
+    with wall_fan_lock:
+        wall_fan_state = True
+    send_command(1, "WALL_FAN_ON")
+    return jsonify({"success": True, "message": "Wall fans on"})
+
+@app.route("/api/wallfan/off", methods=["POST"])
+def wall_fan_off():
+    global wall_fan_state
+    with wall_fan_lock:
+        wall_fan_state = False
+    send_command(1, "WALL_FAN_OFF")
+    return jsonify({"success": True, "message": "Wall fans off"})
+
+@app.route("/api/wallfan/status")
+def wall_fan_status():
+    with wall_fan_lock:
+        return jsonify({"wall_fan": wall_fan_state})
 
 # ─── FANS ───
 
@@ -488,7 +525,8 @@ if __name__ == "__main__":
 
     threading.Thread(target=nightly_scheduler, daemon=True).start()
     threading.Thread(target=dry_queue_worker,  daemon=True).start()
-    print("[Startup] Starting in MANUAL mode")
+    threading.Thread(target=check_wall_fans,   daemon=True).start()
+    print("[Startup] Starting in AUTO mode")
     print("\n✅ Greenwall running!")
     print("   Dashboard: http://localhost:5000")
     print("   Controls:  http://localhost:5000/control\n")
