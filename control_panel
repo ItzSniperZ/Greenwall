@@ -128,7 +128,7 @@
     .btn.btn-red        { border-color: var(--red);   color: var(--red); }
     .btn.btn-red:hover  { background: var(--red-light); }
     .btn.btn-green      { border-color: var(--green); color: var(--green); background: var(--green-light); }
-    .btn.btn-green:hover{ background: var(--green-light); opacity: 0.8; }
+    .btn.btn-green:hover{ opacity: 0.8; }
     .btn.btn-blue       { border-color: var(--blue);  color: var(--blue); }
     .btn.btn-blue:hover { background: var(--blue-light); }
     .btn.btn-amber      { border-color: var(--amber); color: var(--amber); }
@@ -390,6 +390,10 @@
       <button class="btn btn-amber" onclick="globalFan(false)">Fans OFF</button>
     </div>
     <div class="btn-group">
+      <button class="btn" onclick="wallFan(true)">Wall Fans ON</button>
+      <button class="btn btn-amber" onclick="wallFan(false)">Wall Fans OFF</button>
+    </div>
+    <div class="btn-group">
       <button class="btn"           onclick="globalLed('OFF')">LEDs Off</button>
       <button class="btn btn-red"   onclick="globalLed('R')">All Red</button>
       <button class="btn btn-green" onclick="globalLed('G')">All Green</button>
@@ -432,7 +436,7 @@ async function api(path, method='POST') {
   try {
     const res = await fetch(`${API}${path}`, { method });
     return await res.json();
-  } catch(e) { toast('⚠ API error'); }
+  } catch(e) { toast('API error'); }
 }
 
 async function toggleMode() {
@@ -440,7 +444,7 @@ async function toggleMode() {
   await api(`/api/mode/${newMode}`);
   currentMode = newMode;
   updateModeButton();
-  toast(`Mode → ${newMode.toUpperCase()}`);
+  toast(`Mode -> ${newMode.toUpperCase()}`);
 }
 
 function updateModeButton() {
@@ -453,6 +457,11 @@ function updateModeButton() {
     btn.textContent = '○ MANUAL';
     btn.className = 'btn btn-amber';
   }
+}
+
+async function wallFan(on) {
+  await api(`/api/wallfan/${on ? 'on' : 'off'}`);
+  toast(`Wall fans ${on ? 'ON' : 'OFF'}`);
 }
 
 async function setFanCell(boardId, cellIdx, on) {
@@ -472,7 +481,7 @@ async function setLed(boardId, color) {
     await api(`/api/led/${boardId}/all/${color}`);
   }
   updateHexes(boardId);
-  toast(`S${boardId} LEDs → ${color}`);
+  toast(`S${boardId} LEDs -> ${color}`);
 }
 
 async function setSolenoid(boardId, cellIdx, on) {
@@ -483,18 +492,18 @@ async function setSolenoid(boardId, cellIdx, on) {
 
 async function applyToSelected(boardId, color) {
   const sel = state[boardId].selectedCells;
-  if (sel.size === 0) { toast('Select cells first — click hexagons'); return; }
+  if (sel.size === 0) { toast('Select cells first -- click hexagons'); return; }
   for (const i of sel) {
     state[boardId].cellLeds[i] = color;
     await api(`/api/led/${boardId}/${i+1}/${color}`);
   }
   updateHexes(boardId);
-  toast(`S${boardId} cells [${[...sel].map(i=>i+1).join(',')}] → ${color}`);
+  toast(`S${boardId} cells [${[...sel].map(i=>i+1).join(',')}] -> ${color}`);
 }
 
 async function applyToSelectedSolenoid(boardId, on) {
   const sel = state[boardId].selectedCells;
-  if (sel.size === 0) { toast('Select cells first — click hexagons'); return; }
+  if (sel.size === 0) { toast('Select cells first -- click hexagons'); return; }
   for (const i of sel) {
     state[boardId].solenoids[i] = on;
     await api(`/api/solenoid/${boardId}/${i+1}/${on?'on':'off'}`);
@@ -524,14 +533,14 @@ async function globalLed(color) {
     state[s].selectedCells.clear();
     updateHexes(s);
   });
-  toast(`All LEDs → ${color}`);
+  toast(`All LEDs -> ${color}`);
 }
 
 async function globalBreathe(on) {
   if (on) {
     await api('/api/led/all/breathe/green');
     SECTIONS.forEach(s => { state[s].led='Breathe'; state[s].cellLeds=Array(6).fill('Breathe'); updateHexes(s); });
-    toast('Breathe green — all sections');
+    toast('Breathe green -- all sections');
   } else {
     await api('/api/led/all/breathe/stop');
     SECTIONS.forEach(s => { state[s].led='OFF'; state[s].cellLeds=Array(6).fill('OFF'); updateHexes(s); });
@@ -669,7 +678,7 @@ function buildSections() {
       </div>
 
       <div class="cell-toolbar">
-        <span class="cell-toolbar-label">Selected cells → apply</span>
+        <span class="cell-toolbar-label">Selected cells -> apply</span>
         <div class="cell-action-btns">
           <button class="cell-action-btn"           onclick="applyToSelected(${boardId},'OFF')">Off</button>
           <button class="cell-action-btn ca-R"      onclick="applyToSelected(${boardId},'R')">Red</button>
@@ -690,7 +699,6 @@ function buildSections() {
 
 buildSections();
 
-// Poll status and mode
 async function pollStatus() {
   try {
     const [dataRes, modeRes] = await Promise.all([
