@@ -15,7 +15,7 @@ const int bluePins[6]     = {4,  7,  10, 13, 46, 49};
 const int photocellPin = A3;
 
 const int DRY_THRESHOLD  = 215;
-const int WET_THRESHOLD  = 730;
+const int WET_THRESHOLD  = 950;
 const int LIGHT_MIN      = 980;
 const int LIGHT_MAX      = 1023;
 const int FAN_ON_TEMP    = 28;
