@@ -18,7 +18,7 @@ const int wallFanLeft   = 35;
 const int wallFanRight  = 37;
 
 const int DRY_THRESHOLD  = 215;
-const int WET_THRESHOLD  = 730;
+const int WET_THRESHOLD  = 950;
 const int LIGHT_MIN      = 980;
 const int LIGHT_MAX      = 1023;
 const int FAN_ON_TEMP    = 28;
