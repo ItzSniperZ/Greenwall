@@ -394,6 +394,10 @@
       <button class="btn btn-amber" onclick="wallFan(false)">Wall Fans OFF</button>
     </div>
     <div class="btn-group">
+      <button class="btn btn-green" onclick="triggerPump()">Pump Cycle</button>
+      <button class="btn btn-red" onclick="pumpOff()">Pump OFF</button>
+    </div>
+    <div class="btn-group">
       <button class="btn"           onclick="globalLed('OFF')">LEDs Off</button>
       <button class="btn btn-red"   onclick="globalLed('R')">All Red</button>
       <button class="btn btn-green" onclick="globalLed('G')">All Green</button>
@@ -457,6 +461,17 @@ function updateModeButton() {
     btn.textContent = '○ MANUAL';
     btn.className = 'btn btn-amber';
   }
+}
+
+async function triggerPump() {
+  const res = await api('/api/pump/trigger');
+  if (res && res.success) toast('Pump cycle started');
+  else toast(res && res.error ? res.error : 'Pump already running');
+}
+
+async function pumpOff() {
+  await api('/api/pump/off');
+  toast('Pump OFF');
 }
 
 async function wallFan(on) {
