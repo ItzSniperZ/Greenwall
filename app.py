@@ -399,16 +399,6 @@ def manual_pump_trigger():
     threading.Thread(target=run_nightly_cycle, daemon=True).start()
     return jsonify({"success": True, "message": "Cycle started"})
 
-@app.route("/api/pump/off", methods=["POST"])
-def pump_off():
-    global pump_running
-    send_command(1, "PUMP_OFF")
-    for board_id in [1, 2, 3, 4]:
-        send_command(board_id, "ALL_SOL_OFF")
-    with pump_lock:
-        pump_running = False
-    return jsonify({"success": True, "message": "Pump off, all solenoids closed"})
-
 # ─── WALL FANS ───
 
 @app.route("/api/wallfan/on", methods=["POST"])
