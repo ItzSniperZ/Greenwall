@@ -394,7 +394,7 @@
       <button class="btn btn-amber" onclick="wallFan(false)">Wall Fans OFF</button>
     </div>
     <div class="btn-group">
-      <button class="btn btn-green" onclick="triggerPump()">Pump Cycle</button>
+      <button class="btn btn-green" onclick="pumpOn()">Pump ON</button>
       <button class="btn btn-red" onclick="pumpOff()">Pump OFF</button>
     </div>
     <div class="btn-group">
@@ -463,10 +463,9 @@ function updateModeButton() {
   }
 }
 
-async function triggerPump() {
-  const res = await api('/api/pump/trigger');
-  if (res && res.success) toast('Pump cycle started');
-  else toast(res && res.error ? res.error : 'Pump already running');
+async function pumpOn() {
+  await api('/api/pump/on');
+  toast('Pump ON');
 }
 
 async function pumpOff() {
